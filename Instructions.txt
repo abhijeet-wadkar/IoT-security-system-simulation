@@ -1,0 +1,24 @@
+Instruction to build the code:
+1) Open the command prompt
+2) Goto make folder
+3) Give executable permission to build.sh 
+	$ chmod +x build.sh
+4) executed build.sh (./build.sh) script
+	$ ./build.sh
+
+This will compile all source files and create obj folder under the main directory
+1) command to run gateway
+	$ cd obj/gateway
+	$ ./gateway ../../SampleInput/SampleGatewayConfigurationFile.txt
+2) sensor exectuable
+	$ cd obj/sensor
+	$ ./sensor ../../SampleInput/SampleSensorConfigurationFile1.txt ../../SampleInput/SampleSensorInputFile.txt
+	$ ./sensor ../../SampleInput/SampleSensorConfigurationFile2.txt ../../SampleInput/SampleSensorInputFile.txt
+	$ ./sensor ../../SampleInput/SampleSensorConfigurationFile3.txt ../../SampleInput/SampleSensorInputFile.txt
+	$ ./sensor ../../SampleInput/SampleSensorConfigurationFile4.txt ../../SampleInput/SampleSensorInputFile.txt
+3) device executable
+	$ cd obj/device
+	$ ./device ../../SampleInput/SampleSmartDeviceConfigurationFile1.txt
+	$ ./device ../../SampleInput/SampleSmartDeviceConfigurationFile2.txt
+
+	

@@ -1,0 +1,17 @@
+Note: Open New Terminal for executing new instance gateway/sensor/device
+
+1) command to run gateway
+	$ cd obj/gateway
+	$ ./gateway ../../SampleInput/SampleGatewayConfigurationFile.txt
+2) sensor exectuable
+	$ cd obj/sensor
+	$ ./sensor ../../SampleInput/SampleSensorConfigurationFile1.txt ../../SampleInput/SampleSensorInputFile.txt
+	$ ./sensor ../../SampleInput/SampleSensorConfigurationFile2.txt ../../SampleInput/SampleSensorInputFile.txt
+	$ ./sensor ../../SampleInput/SampleSensorConfigurationFile3.txt ../../SampleInput/SampleSensorInputFile.txt
+	$ ./sensor ../../SampleInput/SampleSensorConfigurationFile4.txt ../../SampleInput/SampleSensorInputFile.txt
+3) device executable
+	$ cd obj/device
+	$ ./device ../../SampleInput/SampleSmartDeviceConfigurationFile1.txt
+	$ ./device ../../SampleInput/SampleSmartDeviceConfigurationFile2.txt
+
+	
