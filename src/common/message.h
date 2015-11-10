@@ -10,6 +10,7 @@
 
 #define MAX_TYPE_LENGTH 10
 #define MAX_ACTION_LENGTH 50
+#define CLOCK_SIZE 4
 
 typedef enum message_type
 {

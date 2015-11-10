@@ -125,7 +125,7 @@ void send_socket(int socket_fd, char* data, int length)
 	}
 }
 
-int read_message(int socket_fd, message *msg)
+int read_message(int socket_fd, int logical_clock[CLOCK_SIZE], message *msg)
 {
 	int read_count = 0;
 	int msg_size = 0;
@@ -137,7 +137,7 @@ int read_message(int socket_fd, message *msg)
 	/*read length */
 	while(1)
 	{
-		read_count += read(socket_fd, &msg_size, sizeof(int) - read_count);
+		read_count += read(socket_fd, &msg_size+read_count, sizeof(int) - read_count);
 		if(read_count==0)
 		{
 			return (E_SOCKET_CONNECTION_CLOSED);
@@ -148,6 +148,17 @@ int read_message(int socket_fd, message *msg)
 
 	/*read the message */
 	read_count = 0;
+	while(1)
+	{
+		read_count += read(socket_fd, logical_clock+read_count, sizeof(logical_clock) - read_count);
+		if(read_count==0)
+		{
+			return (E_SOCKET_CONNECTION_CLOSED);
+		}
+		if(read_count == sizeof(logical_clock))
+			break;
+	}
+
 	while(1)
 	{
 		read_count += read(socket_fd, &buffer, msg_size - read_count);
@@ -232,7 +243,7 @@ int read_message(int socket_fd, message *msg)
 	return (E_SUCCESS);
 }
 
-int write_message(int socket_fd, message *msg)
+int write_message(int socket_fd, int logical_clock[CLOCK_SIZE], message *msg)
 {
 	char buffer[100] = {'\0'};
 	char value_str[10] = {'\0'};
@@ -312,6 +323,12 @@ int write_message(int socket_fd, message *msg)
 
 	msg_length = strlen(buffer);
 	send_count = send(socket_fd, &msg_length, sizeof(int), 0);
+	if(send_count < 0)
+	{
+		return (E_SOCKET_CONNCTION_ERORR);
+	}
+
+	send_count = send(socket_fd, &logical_clock, sizeof(logical_clock), 0);
 	if(send_count < 0)
 	{
 		return (E_SOCKET_CONNCTION_ERORR);

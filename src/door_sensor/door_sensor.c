@@ -20,6 +20,7 @@
 #include "network_functions.h"
 #include "message.h"
 #include "string_helper_functions.h"
+#include "logical_clock_utils.h"
 
 static void* accept_callback(void *context);
 static void* read_callback(void *context);
@@ -110,7 +111,7 @@ int create_sensor(sensor_handle *handle, sensor_create_params *params)
 	msg.u.s.port_no = sensor->sensor_params->sensor_port_no;
 	msg.u.s.area_id = sensor->sensor_params->sensor_area_id;
 
-	return_value = write_message(sensor->socket_fd, &msg);
+	return_value = write_message(sensor->socket_fd, sensor->logical_clock, &msg);
 	if(E_SUCCESS != return_value)
 	{
 		LOG_ERROR(("ERROR: Error in registering sensor\n"));
@@ -200,8 +201,9 @@ static void* read_callback(void *context)
 	int return_value = 0;
 	message msg;
 	peer *client = NULL;
+	int msg_logical_clock[CLOCK_SIZE];
 
-	return_value = read_message(sensor->socket_fd, &msg);
+	return_value = read_message(sensor->socket_fd, msg_logical_clock, &msg);
 	if(return_value != E_SUCCESS)
 	{
 		if(return_value == E_SOCKET_CONNECTION_CLOSED)
@@ -212,6 +214,8 @@ static void* read_callback(void *context)
 		LOG_ERROR(("ERROR: Error in read message\n"));
 		return NULL;
 	}
+
+	adjust_clock(sensor->logical_clock, msg_logical_clock);
 
 	switch(msg.type)
 	{
@@ -299,6 +303,7 @@ void* set_value_thread(void *context)
 	{
 		msg.u.value = sensor->value;
 
+		sensor->logical_clock[1]++;
 		LOG_INFO(("INFO: Sending temperature value %d to gateway\n", sensor->value));
 		return_value = write_message(sensor->socket_fd, &msg);
 		if(E_SUCCESS != return_value)

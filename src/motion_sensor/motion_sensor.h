@@ -9,6 +9,7 @@
 #define SENSOR_H_
 
 #include <pthread.h>
+#include "message.h"
 
 #include "network_read_thread.h"
 
@@ -49,6 +50,7 @@ struct sensor_context
 	int server_socket_fd;
 	int recv_peer_count;
 	int send_peer_count;
+	int logical_clock[CLOCK_SIZE];
 };
 
 int create_sensor(sensor_handle *handle, sensor_create_params *params);
