@@ -179,6 +179,23 @@ void* accept_callback(void *context)
 	}
 	client->connection_state = 1;
 
+	if (gateway->client_count == 4)
+	{
+		for (int index=0; index < 4; index++)
+		{
+			message msg;
+			msg.type = REGISTER;
+			msg.u.s.type = gateway->clients[index].type;
+			msg.u.s.ip_address = gatewa->clients[index].client_ip_address;
+			msg.u.s.port_no = gateway->clients[index].client_port_number;
+			msg.u.s.area_id = gateway->clients[index].area_id;
+			return_value = write_message(gateway->comm_socket_fd, &msg);
+			if (E_SUCCESS != return_value)
+			{
+				LOG_ERROR(("ERROR: unable to send the message\n"));
+			}
+		}
+	}
 	return (NULL);
 }
 

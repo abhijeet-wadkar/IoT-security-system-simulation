@@ -134,6 +134,10 @@ void delete_sensor(sensor_handle handle)
 	}
 }
 
+static void* accept_callback(void *context)
+{
+	
+}
 static void* read_callback(void *context)
 {
 	sensor_context *sensor = (sensor_context*)context;
