@@ -11,6 +11,7 @@ SRCS = src/key_chain_sensor/key_chain_sensor.c \
 	src/common/network_functions.c \
 	src/common/network_read_thread.c \
 	src/common/string_helper_functions.c \
-	src/common/logger.c
+	src/common/logger.c \
+	src/common/logical_clock_utils.c
 	
 include base_make.mk
