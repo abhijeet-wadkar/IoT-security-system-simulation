@@ -150,12 +150,12 @@ int read_message(int socket_fd, int logical_clock[CLOCK_SIZE], message *msg)
 	read_count = 0;
 	while(1)
 	{
-		read_count += read(socket_fd, logical_clock+read_count, sizeof(logical_clock) - read_count);
+		read_count += read(socket_fd, logical_clock+read_count, (sizeof(int)*CLOCK_SIZE) - read_count);
 		if(read_count==0)
 		{
 			return (E_SOCKET_CONNECTION_CLOSED);
 		}
-		if(read_count == sizeof(logical_clock))
+		if(read_count == (sizeof(int)*CLOCK_SIZE))
 			break;
 	}
 
@@ -329,7 +329,7 @@ int write_message(int socket_fd, int logical_clock[CLOCK_SIZE], message *msg)
 		return (E_SOCKET_CONNCTION_ERORR);
 	}
 
-	send_count = send(socket_fd, &logical_clock, sizeof(logical_clock), 0);
+	send_count = send(socket_fd, &logical_clock, (sizeof(int)*CLOCK_SIZE), 0);
 	if(send_count < 0)
 	{
 		return (E_SOCKET_CONNCTION_ERORR);

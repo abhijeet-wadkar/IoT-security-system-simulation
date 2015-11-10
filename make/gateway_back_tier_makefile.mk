@@ -1,6 +1,6 @@
 CC = gcc
 CCFLAGS = -g -Wall -DDEBUG --std=gnu99
-EXE_NAME = gateway
+EXE_NAME = gateway_back_tier
 EXT_LIB = -lpthread
 
 INCLUDES = src/common \
