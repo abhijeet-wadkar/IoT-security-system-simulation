@@ -178,7 +178,7 @@ void* read_callback(void *context)
 	switch(msg.type)
 	{
 		// we are not entertaining any other message type at back end
-		//case INSERT_DATA:
+		case INSERT_DATA:
 			LOG_DEBUG(("DEBUG: Insert data message is received\n"));
 			print_state(gateway);
 			break;
