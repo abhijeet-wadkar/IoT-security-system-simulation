@@ -29,7 +29,7 @@ void print_logical_clock(int logical_clock[CLOCK_SIZE])
 	LOG_INFO(("<"));
 	for(int index=0; index<CLOCK_SIZE; index++)
 	{
-		LOG_INFO(("%d", logical_clock[index]));
+		LOG_INFO(("%d,", logical_clock[index]));
 	}
 	LOG_INFO((">"));
 }

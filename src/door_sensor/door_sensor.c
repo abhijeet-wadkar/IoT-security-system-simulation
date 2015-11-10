@@ -217,7 +217,10 @@ static void* read_callback(void *context)
 		return NULL;
 	}
 
+	LOG_INFO(("INFO: msg clock"));
+	print_logical_clock(msg_logical_clock);
 	adjust_clock(sensor->logical_clock, msg_logical_clock);
+	print_logical_clock(sensor->logical_clock);
 
 	switch(msg.type)
 	{
@@ -306,6 +309,7 @@ void* set_value_thread(void *context)
 		msg.u.value = sensor->value;
 
 		sensor->logical_clock[1]++;
+		print_logical_clock(sensor->logical_clock);
 		LOG_INFO(("INFO: Sending temperature value %d to gateway\n", sensor->value));
 		return_value = write_message(sensor->socket_fd, sensor->logical_clock, &msg);
 		if(E_SUCCESS != return_value)

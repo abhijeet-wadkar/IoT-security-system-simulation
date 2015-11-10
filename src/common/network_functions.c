@@ -129,7 +129,7 @@ int read_message(int socket_fd, int logical_clock[CLOCK_SIZE], message *msg)
 {
 	int read_count = 0;
 	int msg_size = 0;
-	char buffer[60] = {'\0'};
+	char buffer[100] = {'\0'};
 	char *tokens[10] = {NULL};
 	int count = 0;
 	char *register_tokens[10] = {NULL};
@@ -159,9 +159,10 @@ int read_message(int socket_fd, int logical_clock[CLOCK_SIZE], message *msg)
 			break;
 	}
 
+	read_count=0;
 	while(1)
 	{
-		read_count += read(socket_fd, &buffer, msg_size - read_count);
+		read_count += read(socket_fd, buffer+read_count, msg_size - read_count);
 		if(read_count==0)
 		{
 			return (E_SOCKET_CONNECTION_CLOSED);

@@ -11,5 +11,6 @@
 #include "message.h"
 
 void adjust_clock(int local_clock[CLOCK_SIZE], int msg_clock[CLOCK_SIZE]);
+void print_logical_clock(int logical_clock[CLOCK_SIZE]);
 
 #endif /* LOGICAL_CLOCK_UTILS_H_ */

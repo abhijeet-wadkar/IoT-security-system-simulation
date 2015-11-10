@@ -84,6 +84,7 @@ int create_gateway(gateway_handle* handle, gateway_create_params *params)
 		LOG_ERROR(("ERROR: Out of memory\n"));
 		return (E_OUT_OF_MEMORY);
 	}
+	memset(gateway, 0, sizeof(gateway_context));
 
 	gateway->client_count = 0;
 
@@ -187,29 +188,6 @@ void* accept_callback(void *context)
 	}
 	client->connection_state = 1;
 
-
-	// Check if all the components of the system are connected to the gateway
-	if (gateway->client_count == 5)
-	{
-		for (int index=0; index < 5; index++)
-		{
-			if( gateway->clients[index]->type != BACK_TIER_GATEWAY)
-			{
-				message msg;
-				msg.type = REGISTER;
-				msg.u.s.type = gateway->clients[index]->type;
-				msg.u.s.ip_address = gateway->clients[index]->client_ip_address;
-				msg.u.s.port_no = gateway->clients[index]->client_port_number;
-				msg.u.s.area_id = gateway->clients[index]->area_id;
-
-				return_value = write_message(gateway->clients[index]->comm_socket_fd, gateway->logical_clock, &msg);
-				if (E_SUCCESS != return_value)
-				{
-					LOG_ERROR(("ERROR: unable to send the message\n"));
-				}
-			}
-		}
-	}
 	return (NULL);
 }
 
@@ -263,7 +241,7 @@ void* read_callback(void *context)
 			free(client);
 			return NULL;
 		}
-		LOG_ERROR(("ERROR: Error in read message\n"));
+		LOG_ERROR(("ERROR: Error in read message, error: %d\n", return_value));
 		return NULL;
 	}
 
@@ -293,6 +271,29 @@ void* read_callback(void *context)
 		if(client->type == SECURITY_DEVICE)
 		{
 			client->state = 0;
+		}
+
+		// Check if all the components of the system are connected to the gateway
+		if (gateway->client_count == 4)
+		{
+			for (int index=0; index < 4; index++)
+			{
+				if( gateway->clients[index]->type != BACK_TIER_GATEWAY)
+				{
+					message msg;
+					msg.type = REGISTER;
+					msg.u.s.type = gateway->clients[index]->type;
+					msg.u.s.ip_address = gateway->clients[index]->client_ip_address;
+					msg.u.s.port_no = gateway->clients[index]->client_port_number;
+					msg.u.s.area_id = gateway->clients[index]->area_id;
+
+					return_value = write_message(gateway->clients[index]->comm_socket_fd, gateway->logical_clock, &msg);
+					if (E_SUCCESS != return_value)
+					{
+						LOG_ERROR(("ERROR: unable to send the message\n"));
+					}
+				}
+			}
 		}
 		break;
 	case CURRENT_VALUE:
