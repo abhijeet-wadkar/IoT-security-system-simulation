@@ -23,6 +23,7 @@ char* device_string[] = {
 		"key_chain_sensor",
 		"security_device",
 		"gateway",
+		"back_tier_gateway",
 		"unknown"};
 
 char* state_string[] = {

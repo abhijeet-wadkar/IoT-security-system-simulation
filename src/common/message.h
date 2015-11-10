@@ -27,6 +27,7 @@ typedef enum device_type
 	KEY_CHAIN_SENSOR,
 	SECURITY_DEVICE,
 	GATEWAY,
+	BACK_TIER_GATEWAY,
 	UNKNOWN
 }device_type;
 

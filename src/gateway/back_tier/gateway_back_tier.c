@@ -89,7 +89,7 @@ int create_gateway(gateway_handle* handle, gateway_create_params *params)
 	}
 
 	/* create connection to server */
-	return_value = create_server_socket(&gateway->server_socket_fd, params->gateway_ip_address, params->gateway_port_no);
+	return_value = create_socket(&gateway->server_socket_fd, params->gateway_ip_address, params->gateway_port_no);
 	if(E_SUCCESS != return_value)
 	{
 		LOG_ERROR(("ERROR: Error in creating the socket\n"));
@@ -105,8 +105,22 @@ int create_gateway(gateway_handle* handle, gateway_create_params *params)
 		delete_gateway((gateway_handle)gateway);
 		return (return_value);
 	}
-	*handle = gateway;
+	message msg;
 
+	/* register device with gateway */
+	msg.type = REGISTER;
+	msg.u.s.type = BACK_TIER_GATEWAY;
+	msg.u.s.ip_address = params->gateway_ip_address;
+	msg.u.s.port_no = params->gateway_port_no;
+	msg.u.s.area_id = 0;
+
+	return_value = write_message(gateway->server_socket_fd, &msg);
+	if(E_SUCCESS != return_value)
+	{
+		LOG_ERROR(("ERROR: Error in registering device\n"));
+		return (E_FAILURE);
+	}
+	*handle = gateway;
 	return (E_SUCCESS);
 }
 void delete_gateway(gateway_handle handle)
@@ -140,63 +154,6 @@ void delete_gateway(gateway_handle handle)
 
 		free(gateway);
 	}
-}
-
-void* accept_callback(void *context)
-{
-	int return_value = 0;
-	gateway_context *gateway = NULL;
-	gateway_client *client = NULL;
-
-	gateway = (gateway_context*)context;
-
-	client = (gateway_client*)malloc(sizeof(gateway_client));
-	if(!client)
-	{
-		LOG_DEBUG(("DEBUG: Out of memory\n"));
-		return (NULL);
-	}
-
-	client->gateway = context;
-	client->comm_socket_fd = accept(gateway->server_socket_fd, (struct sockaddr*)NULL, NULL);
-	if(client->comm_socket_fd < 0)
-	{
-		LOG_ERROR(("ERROR: Accept call failed\n"));
-		free(client);
-		return NULL;
-	}
-
-	gateway->clients[gateway->client_count] = client;
-	gateway->client_count++;
-
-	/* add socket to network read thread */
-	return_value = add_socket(gateway->network_thread, client->comm_socket_fd,  (void*)client, &read_callback);
-	if(E_SUCCESS != return_value)
-	{
-		LOG_ERROR(("ERROR: add_socket() failed\n"));
-		free(client);
-		return (NULL);
-	}
-	client->connection_state = 1;
-
-	if (gateway->client_count == 4)
-	{
-		for (int index=0; index < 4; index++)
-		{
-			message msg;
-			msg.type = REGISTER;
-			msg.u.s.type = gateway->clients[index].type;
-			msg.u.s.ip_address = gatewa->clients[index].client_ip_address;
-			msg.u.s.port_no = gateway->clients[index].client_port_number;
-			msg.u.s.area_id = gateway->clients[index].area_id;
-			return_value = write_message(gateway->comm_socket_fd, &msg);
-			if (E_SUCCESS != return_value)
-			{
-				LOG_ERROR(("ERROR: unable to send the message\n"));
-			}
-		}
-	}
-	return (NULL);
 }
 
 void* read_callback(void *context)
