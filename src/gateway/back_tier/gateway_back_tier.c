@@ -76,6 +76,7 @@ int create_gateway(gateway_handle* handle, gateway_create_params *params)
 		LOG_ERROR(("ERROR: Out of memory\n"));
 		return (E_OUT_OF_MEMORY);
 	}
+	memset(gateway, 0, sizeof(gateway_context));
 
 	gateway->client_count = 0;
 
