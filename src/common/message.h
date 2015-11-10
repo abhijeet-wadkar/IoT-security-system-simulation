@@ -18,8 +18,8 @@ typedef enum message_type
 	CURRENT_STATE,
 	CURRENT_VALUE,
 	SET_INTERVAL,
-	REGISTER
-	INSERT_DATA,
+	REGISTER,
+	INSERT_DATA
 }message_type;
 
 typedef enum device_type
