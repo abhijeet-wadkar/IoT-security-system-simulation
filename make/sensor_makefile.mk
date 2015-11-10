@@ -1,5 +1,5 @@
 CC = gcc
-CCFLAGS = -DDEBUG -g -Wall
+CCFLAGS = -DDEBUG -g -Wall --std=c99
 EXE_NAME = sensor
 EXT_LIB = -lpthread
 

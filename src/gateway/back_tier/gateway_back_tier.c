@@ -31,7 +31,6 @@ char* state_string[] = {
 		"on"
 };
 
-void* accept_callback(void *context);
 void* read_callback(void*);
 
 void print_state(gateway_context *gateway)
@@ -99,7 +98,7 @@ int create_gateway(gateway_handle* handle, gateway_create_params *params)
 	}
 
 	/* add socket to network read thread */
-	return_value = add_socket(gateway->network_thread, gateway->server_socket_fd,  (void*)gateway, &accept_callback);
+	return_value = add_socket(gateway->network_thread, gateway->server_socket_fd,  (void*)gateway, &read_callback);
 	if(E_SUCCESS != return_value)
 	{
 		LOG_ERROR(("ERROR: add_socket() failed\n"));
@@ -115,7 +114,7 @@ int create_gateway(gateway_handle* handle, gateway_create_params *params)
 	msg.u.s.port_no = params->gateway_port_no;
 	msg.u.s.area_id = 0;
 
-	return_value = write_message(gateway->server_socket_fd, &msg);
+	return_value = write_message(gateway->server_socket_fd, gateway->logical_clock, &msg);
 	if(E_SUCCESS != return_value)
 	{
 		LOG_ERROR(("ERROR: Error in registering device\n"));
@@ -163,11 +162,12 @@ void* read_callback(void *context)
 	gateway_context *gateway = client->gateway;
 	int return_value = 0;
 	message msg;
-	message snd_msg;
-	int index;
-	int flag_found = 0;
+	//message snd_msg;
+	//int index;
+	//int flag_found = 0;
+	int msg_logical_clock[CLOCK_SIZE];
 
-	return_value = read_message(client->comm_socket_fd, &msg);
+	return_value = read_message(client->comm_socket_fd, msg_logical_clock, &msg);
 	if(return_value != E_SUCCESS)
 	{
 		LOG_ERROR(("ERROR: Error in read message\n"));
@@ -177,8 +177,8 @@ void* read_callback(void *context)
 	switch(msg.type)
 	{
 		// we are not entertaining any other message type at back end
-		case INSERT_DATA:
-			LOG_DEBUG("DEBUG: Insert data message is received\n");
+		//case INSERT_DATA:
+			LOG_DEBUG(("DEBUG: Insert data message is received\n"));
 			print_state(gateway);
 			break;
 		default:

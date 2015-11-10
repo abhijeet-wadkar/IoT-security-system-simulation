@@ -12,6 +12,8 @@
 #include <unistd.h>
 #include <signal.h>
 #include <ctype.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 
 #include "common.h"
 #include "key_chain_sensor.h"
@@ -317,11 +319,23 @@ void* set_value_thread(void *context)
 
 		sensor->logical_clock[2]++;
 		LOG_INFO(("INFO: Sending temperature value %d to gateway\n", sensor->value));
-		return_value = write_message(sensor->socket_fd, &msg);
+		return_value = write_message(sensor->socket_fd, sensor->logical_clock, &msg);
 		if(E_SUCCESS != return_value)
 		{
 			LOG_ERROR(("ERROR: Error in sending sensor temperature value to gateway\n"));
 		}
+
+		for(int index=0; index<sensor->send_peer_count; index++)
+		{
+			return_value = write_message(sensor->send_peer[index]->comm_socket_fd,
+					sensor->logical_clock,
+					&msg);
+			if(E_SUCCESS != return_value)
+			{
+				LOG_ERROR(("ERROR: Error in sending sensor temperature value to peer\n"));
+			}
+		}
+
 		LOG_INFO(("INFO: Sleeping for %d second(s)\n", sensor->interval));
 		sleep(sensor->interval);
 		sensor->clock += sensor->interval;

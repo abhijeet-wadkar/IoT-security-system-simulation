@@ -16,6 +16,7 @@
 #include "logger.h"
 #include "network_functions.h"
 #include "network_read_thread.h"
+#include "logical_clock_utils.h"
 
 char* device_string[] = {
 		"door_sensor",
@@ -192,15 +193,16 @@ void* accept_callback(void *context)
 	{
 		for (int index=0; index < 5; index++)
 		{
-			if( gateway->clients[index].type != BACK_TIER_GATEWAY)
+			if( gateway->clients[index]->type != BACK_TIER_GATEWAY)
 			{
 				message msg;
 				msg.type = REGISTER;
-				msg.u.s.type = gateway->clients[index].type;
-				msg.u.s.ip_address = gatewa->clients[index].client_ip_address;
-				msg.u.s.port_no = gateway->clients[index].client_port_number;
-				msg.u.s.area_id = gateway->clients[index].area_id;
-				return_value = write_message(gateway->clients[index].comm_socket_fd, &msg);
+				msg.u.s.type = gateway->clients[index]->type;
+				msg.u.s.ip_address = gateway->clients[index]->client_ip_address;
+				msg.u.s.port_no = gateway->clients[index]->client_port_number;
+				msg.u.s.area_id = gateway->clients[index]->area_id;
+
+				return_value = write_message(gateway->clients[index]->comm_socket_fd, gateway->logical_clock, &msg);
 				if (E_SUCCESS != return_value)
 				{
 					LOG_ERROR(("ERROR: unable to send the message\n"));
@@ -217,11 +219,12 @@ void* read_callback(void *context)
 	gateway_context *gateway = client->gateway;
 	int return_value = 0;
 	message msg;
-	message snd_msg;
+	//message snd_msg;
 	int index;
 	int flag_found = 0;
+	int msg_logical_clock[CLOCK_SIZE];
 
-	return_value = read_message(client->comm_socket_fd, &msg);
+	return_value = read_message(client->comm_socket_fd, msg_logical_clock, &msg);
 	if(return_value != E_SUCCESS)
 	{
 		if(return_value == E_SOCKET_CONNECTION_CLOSED)
@@ -264,6 +267,8 @@ void* read_callback(void *context)
 		return NULL;
 	}
 
+	adjust_clock(gateway->logical_clock, msg_logical_clock);
+
 	switch(msg.type)
 	{
 	case SET_INTERVAL:
@@ -296,71 +301,8 @@ void* read_callback(void *context)
 
 		client->value = msg.u.value;
 
-		if(msg.u.value < 32)
-		{
-			/* switch all smart devices in area id on */
-			int index;
-			for(index=0; index<gateway->client_count; index++)
-			{
-				if(gateway->clients[index]->type == SECURITY_DEVICE &&
-						strcmp(gateway->clients[index]->area_id, client->area_id)==0 &&
-						gateway->clients[index]->state == 0)
-				{
-					snd_msg.type = SWITCH;
-					snd_msg.u.value = 1;
-					return_value = write_message(gateway->clients[index]->comm_socket_fd, &snd_msg);
-					if(E_SUCCESS != return_value)
-					{
-						LOG_ERROR(("Error in sending switch on message to device %s-%s-%s",
-								gateway->clients[index]->client_ip_address,
-								gateway->clients[index]->client_port_number,
-								gateway->clients[index]->area_id));
-					}
-					gateway->clients[index]->state = 1;
-				}
-			}
-		}
+		/* Order the events and switch security device on or off */
 
-		if(1)
-		{
-			/* switch all smart devices in area id off */
-			int index;
-			int flag = 1;
-
-		/*	for(index=0; index<gateway->client_count; index++)
-			{
-				if(gateway->clients[index]->type == DOOR_SENSOR &&
-						strcmp(gateway->clients[index]->area_id, client->area_id)==0 &&
-						gateway->clients[index]->value < 34)
-				{
-					flag = 0;
-					break;
-				}
-			}*/
-
-			if(flag == 1)
-			{
-				for(index=0; index<gateway->client_count; index++)
-				{
-					if(gateway->clients[index]->type == SECURITY_DEVICE &&
-							strcmp(gateway->clients[index]->area_id, client->area_id)==0 &&
-							gateway->clients[index]->state == 1)
-					{
-						snd_msg.type = SWITCH;
-						snd_msg.u.value = 0;
-						return_value = write_message(gateway->clients[index]->comm_socket_fd, &snd_msg);
-						if(E_SUCCESS != return_value)
-						{
-							LOG_ERROR(("Error in sending switch on message to device %s-%s-%s",
-									gateway->clients[index]->client_ip_address,
-									gateway->clients[index]->client_port_number,
-									gateway->clients[index]->area_id));
-						}
-						gateway->clients[index]->state = 0;
-					}
-				}
-			}
-		}
 		print_state(client->gateway);
 		break;
 	case CURRENT_STATE:
@@ -380,11 +322,13 @@ int set_interval(gateway_handle handle, int index, int interval)
 	gateway_context *gateway = handle;
 	message snd_msg;
 
+	gateway->logical_clock[3]++;
+
 	if(0 <= index && index < gateway->client_count)
 	{
 		snd_msg.type = SET_INTERVAL;
 		snd_msg.u.value = interval;
-		return (write_message(gateway->clients[index]->comm_socket_fd, &snd_msg));
+		return (write_message(gateway->clients[index]->comm_socket_fd, gateway->logical_clock, &snd_msg));
 	}
 	else
 	{

@@ -1,5 +1,5 @@
 CC = gcc
-CCFLAGS = -DDEBUG -g -Wall
+CCFLAGS = -DDEBUG -g -Wall --std=gnu99
 EXE_NAME = key_chain_sensor
 EXT_LIB = -lpthread
 

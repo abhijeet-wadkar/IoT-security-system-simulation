@@ -1,16 +1,17 @@
 CC = gcc
-CCFLAGS = -g -Wall -DDEBUG
+CCFLAGS = -g -Wall -DDEBUG --std=gnu99
 EXE_NAME = gateway
 EXT_LIB = -lpthread
 
 INCLUDES = src/common \
 	src/gateway
 
-SRCS = src/gateway/gateway.c \
-	src/gateway/gateway_main.c \
+SRCS = src/gateway/front_tier/gateway_front_tier.c \
+	src/gateway/front_tier/gateway_main.c \
 	src/common/network_functions.c \
 	src/common/network_read_thread.c \
 	src/common/string_helper_functions.c \
-	src/common/logger.c
+	src/common/logger.c \
+	src/common/logical_clock_utils.c
 	
 include base_make.mk

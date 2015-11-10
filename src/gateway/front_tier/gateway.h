@@ -10,6 +10,7 @@
 
 #include "network_functions.h"
 #include "network_read_thread.h"
+#include "message.h"
 
 typedef void* gateway_handle;
 
@@ -41,6 +42,7 @@ typedef struct gateway_context
 	network_thread_handle network_thread;
 	int client_count;
 	gateway_client *clients[100];
+	int logical_clock[CLOCK_SIZE];
 }gateway_context;
 
 int create_gateway(gateway_handle*, gateway_create_params*);

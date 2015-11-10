@@ -11,6 +11,7 @@
 #include <pthread.h>
 
 #include "network_read_thread.h"
+#include "message.h"
 
 typedef void* device_handle;
 
@@ -29,6 +30,7 @@ typedef struct device_context
 	int socket_fd;
 	network_thread_handle network_thread;
 	int state;
+	int logical_clock[CLOCK_SIZE];
 }device_context;
 
 int create_device(device_handle *handle, device_create_params *params);

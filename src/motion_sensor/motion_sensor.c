@@ -12,6 +12,8 @@
 #include <unistd.h>
 #include <signal.h>
 #include <ctype.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 
 #include "common.h"
 #include "motion_sensor.h"

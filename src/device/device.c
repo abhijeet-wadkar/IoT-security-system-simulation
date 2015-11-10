@@ -72,7 +72,7 @@ int create_device(device_handle *handle, device_create_params *params)
 	msg.u.s.port_no = device->device_params->device_port_no;
 	msg.u.s.area_id = device->device_params->device_area_id;
 
-	return_value = write_message(device->socket_fd, &msg);
+	return_value = write_message(device->socket_fd, device->logical_clock, &msg);
 	if(E_SUCCESS != return_value)
 	{
 		LOG_ERROR(("ERROR: Error in registering device\n"));
@@ -110,7 +110,7 @@ static void* read_callback(void *context)
 	message msg;
 	message snd_msg;
 
-	return_value = read_message(device->socket_fd, &msg);
+	return_value = read_message(device->socket_fd, device->logical_clock, &msg);
 	if(return_value != E_SUCCESS)
 	{
 		if(return_value == E_SOCKET_CONNECTION_CLOSED)
@@ -137,7 +137,7 @@ static void* read_callback(void *context)
 
 		snd_msg.type = CURRENT_STATE;
 		snd_msg.u.value = device->state;
-		return_value = write_message(device->socket_fd, &snd_msg);
+		return_value = write_message(device->socket_fd, device->logical_clock, &snd_msg);
 		if(E_SUCCESS != return_value)
 		{
 			LOG_ERROR(("ERROR: Error in sending message to gateway\n"));

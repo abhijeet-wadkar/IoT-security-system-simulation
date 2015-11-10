@@ -1,5 +1,5 @@
 CC = gcc
-CCFLAGS = -DDEBUG -g -Wall
+CCFLAGS = -DDEBUG -g -Wall --std=c99
 EXE_NAME = device
 EXT_LIB = -lpthread
 
@@ -11,6 +11,7 @@ SRCS = src/device/device.c \
 	src/common/network_functions.c \
 	src/common/network_read_thread.c \
 	src/common/string_helper_functions.c \
-	src/common/logger.c
+	src/common/logger.c \
+	src/common/logical_clock_utils.c
 	
 include base_make.mk

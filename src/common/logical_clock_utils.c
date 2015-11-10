@@ -6,6 +6,7 @@
  */
 
 #include "logical_clock_utils.h"
+#include "logger.h"
 
 static int max(int a, int b)
 {

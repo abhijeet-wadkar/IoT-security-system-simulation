@@ -95,12 +95,12 @@ int main(int argc, char*argv[])
 		switch(choice)
 		{
 		case 1:
-			print_sensors(gateway);
+			//print_sensors(gateway);
 			printf("Enter sensor id: ");
 			scanf("%d", &choice);
 			printf("Enter new interval: ");
 			scanf("%d", &interval);
-			return_value = set_interval(gateway, choice, interval);
+			//return_value = set_interval(gateway, choice, interval);
 			if(E_SUCCESS != return_value)
 			{
 				printf("Unable to set the interval\n");
