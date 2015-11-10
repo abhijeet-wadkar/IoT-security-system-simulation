@@ -87,6 +87,10 @@ int create_gateway(gateway_handle* handle, gateway_create_params *params)
 	memset(gateway, 0, sizeof(gateway_context));
 
 	gateway->client_count = 0;
+	gateway->logical_clock[0] = 0;
+	gateway->logical_clock[1] = 0;
+	gateway->logical_clock[2] = 0;
+	gateway->logical_clock[3] = 0;
 
 	/* create network read thread */
 	return_value = create_network_thread(&gateway->network_thread, params->gateway_ip_address);
@@ -245,7 +249,10 @@ void* read_callback(void *context)
 		return NULL;
 	}
 
+	LOG_INFO(("INFO: msg clock"));
+	print_logical_clock(msg_logical_clock);
 	adjust_clock(gateway->logical_clock, msg_logical_clock);
+	print_logical_clock(gateway->logical_clock);
 
 	switch(msg.type)
 	{
@@ -286,7 +293,8 @@ void* read_callback(void *context)
 					msg.u.s.ip_address = gateway->clients[index]->client_ip_address;
 					msg.u.s.port_no = gateway->clients[index]->client_port_number;
 					msg.u.s.area_id = gateway->clients[index]->area_id;
-
+					LOG_INFO(("INFO: Sending Clock\n"));
+					print_logical_clock(gateway->logical_clock);
 					return_value = write_message(gateway->clients[index]->comm_socket_fd, gateway->logical_clock, &msg);
 					if (E_SUCCESS != return_value)
 					{
@@ -329,6 +337,8 @@ int set_interval(gateway_handle handle, int index, int interval)
 	{
 		snd_msg.type = SET_INTERVAL;
 		snd_msg.u.value = interval;
+		LOG_INFO(("INFO: Sending Clock\n"));
+		print_logical_clock(gateway->logical_clock);
 		return (write_message(gateway->clients[index]->comm_socket_fd, gateway->logical_clock, &snd_msg));
 	}
 	else

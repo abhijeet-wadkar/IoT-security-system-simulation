@@ -329,7 +329,7 @@ int write_message(int socket_fd, int logical_clock[CLOCK_SIZE], message *msg)
 		return (E_SOCKET_CONNCTION_ERORR);
 	}
 
-	send_count = send(socket_fd, &logical_clock, (sizeof(int)*CLOCK_SIZE), 0);
+	send_count = send(socket_fd, logical_clock, (sizeof(int)*CLOCK_SIZE), 0);
 	if(send_count < 0)
 	{
 		return (E_SOCKET_CONNCTION_ERORR);

@@ -113,6 +113,8 @@ int create_sensor(sensor_handle *handle, sensor_create_params *params)
 	msg.u.s.port_no = sensor->sensor_params->sensor_port_no;
 	msg.u.s.area_id = sensor->sensor_params->sensor_area_id;
 
+	LOG_INFO(("INFO: Sending Clock\n"));
+	print_logical_clock(sensor->logical_clock);
 	return_value = write_message(sensor->socket_fd, sensor->logical_clock, &msg);
 	if(E_SUCCESS != return_value)
 	{

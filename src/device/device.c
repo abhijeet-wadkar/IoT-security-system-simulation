@@ -16,6 +16,7 @@
 #include "logger.h"
 #include "network_functions.h"
 #include "message.h"
+#include "logical_clock_utils.h"
 
 static void* read_callback(void *context);
 
@@ -71,6 +72,9 @@ int create_device(device_handle *handle, device_create_params *params)
 	msg.u.s.ip_address = device->device_params->device_ip_address;
 	msg.u.s.port_no = device->device_params->device_port_no;
 	msg.u.s.area_id = device->device_params->device_area_id;
+
+	LOG_INFO(("INFO: Sending Clock\n"));
+	print_logical_clock(device->logical_clock);
 
 	return_value = write_message(device->socket_fd, device->logical_clock, &msg);
 	if(E_SUCCESS != return_value)
@@ -137,6 +141,8 @@ static void* read_callback(void *context)
 
 		snd_msg.type = CURRENT_STATE;
 		snd_msg.u.value = device->state;
+		LOG_INFO(("INFO: Sending Clock\n"));
+		print_logical_clock(device->logical_clock);
 		return_value = write_message(device->socket_fd, device->logical_clock, &snd_msg);
 		if(E_SUCCESS != return_value)
 		{
