@@ -41,6 +41,12 @@ void print_state(gateway_context *gateway)
 	LOG_GATEWAY(("-----------------------------------------------\n"));
 	for(index=0; index<gateway->client_count; index++)
 	{
+		/* Need to open this code
+
+		if(gateway->clients[index].type == BACK_TIER_GATEWAY)
+		{
+			create message and send it the back end for inserting into the file
+		}*/
 		gateway_client *client = gateway->clients[index];
 		if(client->type == SECURITY_DEVICE)
 		{
@@ -180,20 +186,25 @@ void* accept_callback(void *context)
 	}
 	client->connection_state = 1;
 
-	if (gateway->client_count == 4)
+
+	// Check if all the components of the system are connected to the gateway
+	if (gateway->client_count == 5)
 	{
-		for (int index=0; index < 4; index++)
+		for (int index=0; index < 5; index++)
 		{
-			message msg;
-			msg.type = REGISTER;
-			msg.u.s.type = gateway->clients[index].type;
-			msg.u.s.ip_address = gatewa->clients[index].client_ip_address;
-			msg.u.s.port_no = gateway->clients[index].client_port_number;
-			msg.u.s.area_id = gateway->clients[index].area_id;
-			return_value = write_message(gateway->comm_socket_fd, &msg);
-			if (E_SUCCESS != return_value)
+			if( gateway->clients[index].type != BACK_TIER_GATEWAY)
 			{
-				LOG_ERROR(("ERROR: unable to send the message\n"));
+				message msg;
+				msg.type = REGISTER;
+				msg.u.s.type = gateway->clients[index].type;
+				msg.u.s.ip_address = gatewa->clients[index].client_ip_address;
+				msg.u.s.port_no = gateway->clients[index].client_port_number;
+				msg.u.s.area_id = gateway->clients[index].area_id;
+				return_value = write_message(gateway->clients[index].comm_socket_fd, &msg);
+				if (E_SUCCESS != return_value)
+				{
+					LOG_ERROR(("ERROR: unable to send the message\n"));
+				}
 			}
 		}
 	}

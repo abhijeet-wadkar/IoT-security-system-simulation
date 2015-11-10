@@ -23,6 +23,7 @@ char* device_string[] = {
 		"key_chain_sensor",
 		"security_device",
 		"gateway",
+		"back_tier_gateway",
 		"unknown"};
 
 char* state_string[] = {
@@ -169,191 +170,20 @@ void* read_callback(void *context)
 	return_value = read_message(client->comm_socket_fd, &msg);
 	if(return_value != E_SUCCESS)
 	{
-		if(return_value == E_SOCKET_CONNECTION_CLOSED)
-		{
-			LOG_ERROR(("ERROR: Connection closed for client: %s-%s-%s...\n",
-					client->client_ip_address,
-					client->client_port_number,
-					client->area_id));
-			remove_socket(client->gateway->network_thread, client->comm_socket_fd);
-			client->connection_state = 0;
-			LOG_ERROR(("ERROR: Connection closed for client\n"));
-			index = 0;
-			flag_found = 0;
-			for(index=0; index<gateway->client_count; index++)
-			{
-				if(gateway->clients[index]->comm_socket_fd == client->comm_socket_fd)
-				{
-					flag_found = 1;
-					break;
-				}
-			}
-			if(flag_found == 1)
-			{
-				for(;index<gateway->client_count-1; index++)
-				{
-					gateway->clients[index] = gateway->clients[index+1];
-				}
-				gateway->client_count--;
-			}
-			if(client->client_ip_address)
-				free(client->client_ip_address);
-			if(client->client_port_number)
-				free(client->client_port_number);
-			if(client->area_id)
-				free(client->area_id);
-			free(client);
-			return NULL;
-		}
 		LOG_ERROR(("ERROR: Error in read message\n"));
 		return NULL;
 	}
 
 	switch(msg.type)
 	{
-	case SET_INTERVAL:
-		LOG_DEBUG(("DEBUG: SetInterval message received, Value: %d\n", msg.u.value));
-		break;
-	case REGISTER:
-		LOG_DEBUG(("DEBUG: Register message received\n"));
-		client->type = msg.u.s.type;
-		client->client_ip_address = msg.u.s.ip_address;
-		client->client_port_number = msg.u.s.port_no;
-		client->area_id = msg.u.s.area_id;
-		LOG_DEBUG(("DEBUG: DeviceType:%d\n", client->type));
-		LOG_DEBUG(("DEBUG: IP Address: %s\n", client->client_ip_address));
-		LOG_DEBUG(("DEBUG: Port Number: %s\n", client->client_port_number));
-		LOG_DEBUG(("DEBUG: Area Id: %s\n", client->area_id));
-		if(client->type == DOOR_SENSOR ||
-			client->type == MOTION_SENSOR ||
-			client->type == KEY_CHAIN_SENSOR)
-		{
-			client->state = 1;
-		}
-		if(client->type == SECURITY_DEVICE)
-		{
-			client->state = 0;
-		}
-		break;
-	case CURRENT_VALUE:
-		LOG_DEBUG(("Current value message received\n"));
-		LOG_DEBUG(("Value: %d\n", msg.u.value));
-
-		client->value = msg.u.value;
-
-		if(msg.u.value < 32)
-		{
-			/* switch all smart devices in area id on */
-			int index;
-			for(index=0; index<gateway->client_count; index++)
-			{
-				if(gateway->clients[index]->type == SECURITY_DEVICE &&
-						strcmp(gateway->clients[index]->area_id, client->area_id)==0 &&
-						gateway->clients[index]->state == 0)
-				{
-					snd_msg.type = SWITCH;
-					snd_msg.u.value = 1;
-					return_value = write_message(gateway->clients[index]->comm_socket_fd, &snd_msg);
-					if(E_SUCCESS != return_value)
-					{
-						LOG_ERROR(("Error in sending switch on message to device %s-%s-%s",
-								gateway->clients[index]->client_ip_address,
-								gateway->clients[index]->client_port_number,
-								gateway->clients[index]->area_id));
-					}
-					gateway->clients[index]->state = 1;
-				}
-			}
-		}
-
-		if(1)
-		{
-			/* switch all smart devices in area id off */
-			int index;
-			int flag = 1;
-
-		/*	for(index=0; index<gateway->client_count; index++)
-			{
-				if(gateway->clients[index]->type == DOOR_SENSOR &&
-						strcmp(gateway->clients[index]->area_id, client->area_id)==0 &&
-						gateway->clients[index]->value < 34)
-				{
-					flag = 0;
-					break;
-				}
-			}*/
-
-			if(flag == 1)
-			{
-				for(index=0; index<gateway->client_count; index++)
-				{
-					if(gateway->clients[index]->type == SECURITY_DEVICE &&
-							strcmp(gateway->clients[index]->area_id, client->area_id)==0 &&
-							gateway->clients[index]->state == 1)
-					{
-						snd_msg.type = SWITCH;
-						snd_msg.u.value = 0;
-						return_value = write_message(gateway->clients[index]->comm_socket_fd, &snd_msg);
-						if(E_SUCCESS != return_value)
-						{
-							LOG_ERROR(("Error in sending switch on message to device %s-%s-%s",
-									gateway->clients[index]->client_ip_address,
-									gateway->clients[index]->client_port_number,
-									gateway->clients[index]->area_id));
-						}
-						gateway->clients[index]->state = 0;
-					}
-				}
-			}
-		}
-		print_state(client->gateway);
-		break;
-	case CURRENT_STATE:
-		LOG_DEBUG(("DEBUG: Current state message is received\n"));
-		//client->state = msg.u.value;
-		//print_state(client->gateway);
-		break;
-	default:
-		LOG_DEBUG(("Unknown/Unhandled message is received\n"));
-		break;
+		// we are not entertaining any other message type at back end
+		case INSERT_DATA:
+			LOG_DEBUG("DEBUG: Insert data message is received\n");
+			print_state(gateway);
+			break;
+		default:
+			LOG_DEBUG(("Unknown/Unhandled message is received in back tier gateway\n"));
+			break;
 	}
 	return (NULL);
-}
-
-int set_interval(gateway_handle handle, int index, int interval)
-{
-	gateway_context *gateway = handle;
-	message snd_msg;
-
-	if(0 <= index && index < gateway->client_count)
-	{
-		snd_msg.type = SET_INTERVAL;
-		snd_msg.u.value = interval;
-		return (write_message(gateway->clients[index]->comm_socket_fd, &snd_msg));
-	}
-	else
-	{
-		LOG_ERROR(("ERROR: Such sensor don't exists\n"));
-	}
-	return (E_FAILURE);
-}
-
-void print_sensors(gateway_handle handle)
-{
-	int index;
-	gateway_context *gateway = handle;
-
-	printf("----------------List of sensor---------------\n");
-	printf("<ID>-<IP_Address>-<Port_Number>-<AreaId>\n");
-	for(index=0; index<gateway->client_count; index++)
-	{
-		if(gateway->clients[index]->type == DOOR_SENSOR)
-		{
-			printf("%d:%s-%s-%s\n",
-					index,
-					gateway->clients[index]->client_ip_address,
-					gateway->clients[index]->client_port_number,
-					gateway->clients[index]->area_id);
-		}
-	}
 }
