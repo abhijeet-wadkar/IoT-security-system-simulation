@@ -1,0 +1,7 @@
+0;open
+10;close
+20;open
+30;close
+40;open
+70;close
+

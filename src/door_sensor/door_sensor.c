@@ -84,7 +84,7 @@ int create_sensor(sensor_handle *handle, sensor_create_params *params)
 
 	/* register sensor with gateway */
 	msg.type = REGISTER;
-	msg.u.s.type = SENSOR;
+	msg.u.s.type = DOOR_SENSOR;
 	msg.u.s.ip_address = sensor->sensor_params->sensor_ip_address;
 	msg.u.s.port_no = sensor->sensor_params->sensor_port_no;
 	msg.u.s.area_id = sensor->sensor_params->sensor_area_id;
@@ -192,7 +192,7 @@ void* set_value_thread(void *context)
 	}
 	str_tokenize(line, ";\n\r", tokens, &count);
 	start = atoi(tokens[0]);
-	if(!strcmp (tokens[2], "open"))
+	if(!strcmp (tokens[1], "open"))
 	{
 		value = 1;
 	}
@@ -228,7 +228,7 @@ void* set_value_thread(void *context)
 		}
 
 		start = atoi(tokens[0]);
-		if(!strcmp (tokens[2], "open"))
+		if(!strcmp (tokens[1], "open"))
 		{
 			value = 1;
 		}

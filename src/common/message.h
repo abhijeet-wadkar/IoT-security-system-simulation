@@ -22,8 +22,10 @@ typedef enum message_type
 
 typedef enum device_type
 {
-	SENSOR,
-	SMART_DEVICE,
+	DOOR_SENSOR,
+	MOTION_SENSOR,
+	KEY_CHAIN_SENSOR,
+	SECURITY_DEVICE,
 	GATEWAY,
 	UNKNOWN
 }device_type;

@@ -91,13 +91,21 @@ void close_socket(int socket_fd)
 
 device_type get_device_type(char *str)
 {
-	if(strcmp(str, "sensor")==0)
+	if(strcmp(str, "door_sensor")==0)
 	{
-		return (SENSOR);
+		return (DOOR_SENSOR);
 	}
-	else if(strcmp(str, "device")==0)
+	else if(strcmp(str, "key_chain_sensor")==0)
 	{
-		return (SMART_DEVICE);
+		return (KEY_CHAIN_SENSOR);
+	}
+	else if(strcmp(str, "motion_sensor")==0)
+	{
+		return (MOTION_SENSOR);
+	}
+	else if(strcmp(str, "security_device")==0)
+	{
+		return (SECURITY_DEVICE);
 	}
 	else if(strcmp(str, "gateway")==0)
 	{
@@ -275,11 +283,17 @@ int write_message(int socket_fd, message *msg)
 	case REGISTER:
 		switch(msg->u.s.type)
 		{
-		case SWITCH:
-			strcat(buffer, "sensor");
+		case DOOR_SENSOR:
+			strcat(buffer, "door_sensor");
 			break;
-		case SMART_DEVICE:
-			strcat(buffer, "device");
+		case MOTION_SENSOR:
+			strcat(buffer, "motion_sensor");
+			break;
+		case KEY_CHAIN_SENSOR:
+			strcat(buffer, "key_chain_sensor");
+			break;
+		case SECURITY_DEVICE:
+			strcat(buffer, "security_device");
 			break;
 		case GATEWAY:
 			strcat(buffer, "gateway");

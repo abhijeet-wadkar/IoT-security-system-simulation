@@ -84,7 +84,7 @@ int create_sensor(sensor_handle *handle, sensor_create_params *params)
 
 	/* register sensor with gateway */
 	msg.type = REGISTER;
-	msg.u.s.type = SENSOR;
+	msg.u.s.type = KEY_CHAIN_SENSOR;
 	msg.u.s.ip_address = sensor->sensor_params->sensor_ip_address;
 	msg.u.s.port_no = sensor->sensor_params->sensor_port_no;
 	msg.u.s.area_id = sensor->sensor_params->sensor_area_id;

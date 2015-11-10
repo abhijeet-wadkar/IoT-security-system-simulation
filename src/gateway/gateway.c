@@ -18,8 +18,10 @@
 #include "network_read_thread.h"
 
 char* device_string[] = {
-		"sensor",
-		"device",
+		"door_sensor",
+		"motion_sensor",
+		"key_chain_sensor",
+		"security_device",
 		"gateway",
 		"unknown"};
 
@@ -39,7 +41,7 @@ void print_state(gateway_context *gateway)
 	for(index=0; index<gateway->client_count; index++)
 	{
 		gateway_client *client = gateway->clients[index];
-		if(client->type == SMART_DEVICE)
+		if(client->type == SECURITY_DEVICE)
 		{
 			LOG_GATEWAY(("%d----%s:%s----%s----%s----%s\n",
 									(int)(client&&0xFFFF),
@@ -248,11 +250,13 @@ void* read_callback(void *context)
 		LOG_DEBUG(("DEBUG: IP Address: %s\n", client->client_ip_address));
 		LOG_DEBUG(("DEBUG: Port Number: %s\n", client->client_port_number));
 		LOG_DEBUG(("DEBUG: Area Id: %s\n", client->area_id));
-		if(client->type == SENSOR)
+		if(client->type == DOOR_SENSOR ||
+			client->type == MOTION_SENSOR ||
+			client->type == KEY_CHAIN_SENSOR)
 		{
 			client->state = 1;
 		}
-		if(client->type == SMART_DEVICE)
+		if(client->type == SECURITY_DEVICE)
 		{
 			client->state = 0;
 		}
@@ -269,7 +273,7 @@ void* read_callback(void *context)
 			int index;
 			for(index=0; index<gateway->client_count; index++)
 			{
-				if(gateway->clients[index]->type == SMART_DEVICE &&
+				if(gateway->clients[index]->type == SECURITY_DEVICE &&
 						strcmp(gateway->clients[index]->area_id, client->area_id)==0 &&
 						gateway->clients[index]->state == 0)
 				{
@@ -288,28 +292,28 @@ void* read_callback(void *context)
 			}
 		}
 
-		if(msg.u.value > 34)
+		if(1)
 		{
 			/* switch all smart devices in area id off */
 			int index;
 			int flag = 1;
 
-			for(index=0; index<gateway->client_count; index++)
+		/*	for(index=0; index<gateway->client_count; index++)
 			{
-				if(gateway->clients[index]->type == SENSOR &&
+				if(gateway->clients[index]->type == DOOR_SENSOR &&
 						strcmp(gateway->clients[index]->area_id, client->area_id)==0 &&
 						gateway->clients[index]->value < 34)
 				{
 					flag = 0;
 					break;
 				}
-			}
+			}*/
 
 			if(flag == 1)
 			{
 				for(index=0; index<gateway->client_count; index++)
 				{
-					if(gateway->clients[index]->type == SMART_DEVICE &&
+					if(gateway->clients[index]->type == SECURITY_DEVICE &&
 							strcmp(gateway->clients[index]->area_id, client->area_id)==0 &&
 							gateway->clients[index]->state == 1)
 					{
@@ -369,7 +373,7 @@ void print_sensors(gateway_handle handle)
 	printf("<ID>-<IP_Address>-<Port_Number>-<AreaId>\n");
 	for(index=0; index<gateway->client_count; index++)
 	{
-		if(gateway->clients[index]->type == SENSOR)
+		if(gateway->clients[index]->type == DOOR_SENSOR)
 		{
 			printf("%d:%s-%s-%s\n",
 					index,

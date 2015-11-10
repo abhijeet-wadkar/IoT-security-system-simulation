@@ -67,7 +67,7 @@ int create_device(device_handle *handle, device_create_params *params)
 
 	/* register device with gateway */
 	msg.type = REGISTER;
-	msg.u.s.type = SMART_DEVICE;
+	msg.u.s.type = SECURITY_DEVICE;
 	msg.u.s.ip_address = device->device_params->device_ip_address;
 	msg.u.s.port_no = device->device_params->device_port_no;
 	msg.u.s.area_id = device->device_params->device_area_id;
