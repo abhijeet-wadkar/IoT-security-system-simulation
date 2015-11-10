@@ -13,6 +13,7 @@
 #include "network_read_thread.h"
 
 typedef void* sensor_handle;
+typedef struct sensor_context sensor_context;
 
 typedef struct sensor_create_params
 {
@@ -24,7 +25,15 @@ typedef struct sensor_create_params
 	char *sensor_value_file_name;
 }sensor_create_params;
 
-typedef struct sensor_context
+typedef struct peer
+{
+	char *ip_address;
+	char *port_no;
+	int comm_socket_fd;
+	sensor_context *sensor;
+}peer;
+
+struct sensor_context
 {
 	sensor_create_params *sensor_params;
 	int interval;
@@ -35,7 +44,12 @@ typedef struct sensor_context
 	int value;
 	int run;
 	FILE *sensor_value_file_pointer;
-}sensor_context;
+	peer *recv_peer[10];
+	peer *send_peer[10];
+	int server_socket_fd;
+	int recv_peer_count;
+	int send_peer_count;
+};
 
 int create_sensor(sensor_handle *handle, sensor_create_params *params);
 void delete_sensor(sensor_handle);

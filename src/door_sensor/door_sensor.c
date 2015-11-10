@@ -21,6 +21,7 @@
 #include "message.h"
 #include "string_helper_functions.h"
 
+static void* accept_callback(void *context);
 static void* read_callback(void *context);
 static void* set_value_thread(void *context);
 void sighand(int signo);
@@ -44,6 +45,8 @@ int create_sensor(sensor_handle *handle, sensor_create_params *params)
 	sensor->clock = 0;
 	sensor->value = 0;
 	sensor->run = 1;
+	sensor->recv_peer_count = 0;
+	sensor->send_peer_count = 0;
 
 	sensor->sensor_value_file_pointer = fopen(params->sensor_value_file_name, "r");
 	if(!sensor->sensor_value_file_pointer)
@@ -58,6 +61,24 @@ int create_sensor(sensor_handle *handle, sensor_create_params *params)
 	if(E_SUCCESS != return_value)
 	{
 		LOG_ERROR(("ERROR: Error in creating n/w read thread\n"));
+		delete_sensor((sensor_handle)sensor);
+		return (return_value);
+	}
+
+	/* create connection to server */
+	return_value = create_server_socket(&sensor->server_socket_fd, params->sensor_ip_address, params->sensor_port_no);
+	if(E_SUCCESS != return_value)
+	{
+		LOG_ERROR(("ERROR: Error in creating the socket\n"));
+		delete_sensor((sensor_handle)sensor);
+		return (return_value);
+	}
+
+	/* add socket to network read thread */
+	return_value = add_socket(sensor->network_thread, sensor->server_socket_fd,  (void*)sensor, &accept_callback);
+	if(E_SUCCESS != return_value)
+	{
+		LOG_ERROR(("ERROR: add_socket() failed\n"));
 		delete_sensor((sensor_handle)sensor);
 		return (return_value);
 	}
@@ -84,7 +105,7 @@ int create_sensor(sensor_handle *handle, sensor_create_params *params)
 
 	/* register sensor with gateway */
 	msg.type = REGISTER;
-	msg.u.s.type = DOOR_SENSOR;
+	msg.u.s.type = MOTION_SENSOR;
 	msg.u.s.ip_address = sensor->sensor_params->sensor_ip_address;
 	msg.u.s.port_no = sensor->sensor_params->sensor_port_no;
 	msg.u.s.area_id = sensor->sensor_params->sensor_area_id;
@@ -136,13 +157,49 @@ void delete_sensor(sensor_handle handle)
 
 static void* accept_callback(void *context)
 {
-	
+	int return_value = 0;
+	sensor_context *sensor = NULL;
+	peer *client = NULL;
+
+	sensor = (sensor_context*)context;
+
+	client = (peer*)malloc(sizeof(peer));
+	if(!client)
+	{
+		LOG_DEBUG(("DEBUG: Out of memory\n"));
+		return (NULL);
+	}
+
+	client->sensor = context;
+	client->comm_socket_fd = accept(sensor->server_socket_fd, (struct sockaddr*)NULL, NULL);
+	if(client->comm_socket_fd < 0)
+	{
+		LOG_ERROR(("ERROR: Accept call failed\n"));
+		free(client);
+		return NULL;
+	}
+
+	sensor->recv_peer[sensor->recv_peer_count] = client;
+	sensor->recv_peer_count++;
+
+	/* add socket to network read thread */
+	return_value = add_socket(sensor->network_thread, client->comm_socket_fd,  (void*)client, &read_callback);
+	if(E_SUCCESS != return_value)
+	{
+		LOG_ERROR(("ERROR: add_socket() failed\n"));
+		free(client);
+		return (NULL);
+	}
+	//client->connection_state = 1;
+	return (NULL);
 }
+
 static void* read_callback(void *context)
 {
 	sensor_context *sensor = (sensor_context*)context;
 	int return_value = 0;
 	message msg;
+	peer *client = NULL;
 
 	return_value = read_message(sensor->socket_fd, &msg);
 	if(return_value != E_SUCCESS)
@@ -161,6 +218,39 @@ static void* read_callback(void *context)
 	case SET_INTERVAL:
 		LOG_INFO(("INFO: SetInterval message received\n"));
 		sensor->interval = msg.u.value;
+		break;
+	case REGISTER:
+		LOG_INFO(("INFO: Register received from gateway\n"));
+
+		client = (peer*)malloc(sizeof(peer));
+		if(!client)
+		{
+			LOG_ERROR(("ERROR: Out of memory"));
+			return (NULL);
+		}
+
+		client->ip_address = msg.u.s.ip_address;
+		client->port_no = msg.u.s.port_no;
+		/* create connection to server */
+		return_value = create_socket(&client->comm_socket_fd,
+				msg.u.s.ip_address,
+				msg.u.s.port_no);
+		if(E_SUCCESS != return_value)
+		{
+			LOG_ERROR(("ERROR: Connection to Server failed\n"));
+		}
+
+		/* add socket to network read thread */
+		return_value = add_socket(sensor->network_thread,
+				client->comm_socket_fd,
+				(void*)client,
+				&read_callback);
+		if(E_SUCCESS != return_value)
+		{
+			LOG_ERROR(("ERROR: add_socket() filed\n"));
+		}
+		sensor->send_peer[sensor->send_peer_count] = client;
+		sensor->send_peer_count++;
 		break;
 	default:
 		LOG_INFO(("INFO: Unknown/Unhandled message was received\n"));
