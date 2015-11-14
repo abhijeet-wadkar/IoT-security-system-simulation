@@ -26,6 +26,7 @@
 
 static void* accept_callback(void *context);
 static void* read_callback(void *context);
+static void* read_callback_peer(void *context);
 static void* set_value_thread(void *context);
 void sighand(int signo);
 
@@ -186,7 +187,7 @@ static void* accept_callback(void *context)
 	sensor->recv_peer_count++;
 
 	/* add socket to network read thread */
-	return_value = add_socket(sensor->network_thread, client->comm_socket_fd,  (void*)client, &read_callback);
+	return_value = add_socket(sensor->network_thread, client->comm_socket_fd,  (void*)client, &read_callback_peer);
 	if(E_SUCCESS != return_value)
 	{
 		LOG_ERROR(("ERROR: add_socket() failed\n"));
@@ -194,6 +195,37 @@ static void* accept_callback(void *context)
 		return (NULL);
 	}
 	//client->connection_state = 1;
+	return (NULL);
+}
+
+static void* read_callback_peer(void *context)
+{
+	int return_value = 0;
+	sensor_context *sensor = NULL;
+	peer *client = (peer*)context;
+	message msg;
+
+	sensor = client->sensor;
+
+	int msg_logical_clock[CLOCK_SIZE];
+
+	return_value = read_message(client->comm_socket_fd, msg_logical_clock, &msg);
+	if(return_value != E_SUCCESS)
+	{
+		if(return_value == E_SOCKET_CONNECTION_CLOSED)
+		{
+			LOG_ERROR(("ERROR: Socket connection from server closed...\n"));
+		}
+		LOG_ERROR(("ERROR: Error in read message\n"));
+		return NULL;
+	}
+
+	LOG_INFO(("INFO: msg clock\n"));
+	LOG_INFO(("IP Address: %s, PortNumber: %s\n", client->ip_address, client->port_no));
+	print_logical_clock(msg_logical_clock);
+	adjust_clock(sensor->logical_clock, msg_logical_clock);
+	print_logical_clock(sensor->logical_clock);
+
 	return (NULL);
 }
 
@@ -240,6 +272,9 @@ static void* read_callback(void *context)
 
 		client->ip_address = msg.u.s.ip_address;
 		client->port_no = msg.u.s.port_no;
+
+		LOG_INFO(("INFO: New Peer %s, %s\n", client->ip_address, client->port_no));
+
 		/* create connection to server */
 		return_value = create_socket(&client->comm_socket_fd,
 				msg.u.s.ip_address,
@@ -253,7 +288,7 @@ static void* read_callback(void *context)
 		return_value = add_socket(sensor->network_thread,
 				client->comm_socket_fd,
 				(void*)client,
-				&read_callback);
+				&read_callback_peer);
 		if(E_SUCCESS != return_value)
 		{
 			LOG_ERROR(("ERROR: add_socket() filed\n"));

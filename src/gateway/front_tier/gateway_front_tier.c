@@ -250,6 +250,7 @@ void* read_callback(void *context)
 	}
 
 	LOG_INFO(("INFO: msg clock"));
+	LOG_INFO(("IP Address: %s, PortNumber: %s\n", client->client_ip_address, client->client_port_number));
 	print_logical_clock(msg_logical_clock);
 	adjust_clock(gateway->logical_clock, msg_logical_clock);
 	print_logical_clock(gateway->logical_clock);
@@ -283,22 +284,30 @@ void* read_callback(void *context)
 		// Check if all the components of the system are connected to the gateway
 		if (gateway->client_count == 4)
 		{
-			for (int index=0; index < 4; index++)
+			for(int index=0; index < gateway->client_count; index++)
 			{
-				if( gateway->clients[index]->type != BACK_TIER_GATEWAY)
+				if(gateway->clients[index]->type != BACK_TIER_GATEWAY && gateway->clients[index]->type != SECURITY_DEVICE)
 				{
-					message msg;
-					msg.type = REGISTER;
-					msg.u.s.type = gateway->clients[index]->type;
-					msg.u.s.ip_address = gateway->clients[index]->client_ip_address;
-					msg.u.s.port_no = gateway->clients[index]->client_port_number;
-					msg.u.s.area_id = gateway->clients[index]->area_id;
-					LOG_INFO(("INFO: Sending Clock\n"));
-					print_logical_clock(gateway->logical_clock);
-					return_value = write_message(gateway->clients[index]->comm_socket_fd, gateway->logical_clock, &msg);
-					if (E_SUCCESS != return_value)
+					for(int index1=0; index1<gateway->client_count; index1++)
 					{
-						LOG_ERROR(("ERROR: unable to send the message\n"));
+						if(0 != strcmp(gateway->clients[index]->client_port_number, gateway->clients[index1]->client_port_number)
+								&& gateway->clients[index1]->type != BACK_TIER_GATEWAY
+								&& gateway->clients[index1]->type != SECURITY_DEVICE)
+						{
+							message msg;
+							msg.type = REGISTER;
+							msg.u.s.type = gateway->clients[index1]->type;
+							msg.u.s.ip_address = gateway->clients[index1]->client_ip_address;
+							msg.u.s.port_no = gateway->clients[index1]->client_port_number;
+							msg.u.s.area_id = gateway->clients[index1]->area_id;
+							LOG_INFO(("INFO: Sending Clock\n"));
+							print_logical_clock(gateway->logical_clock);
+							return_value = write_message(gateway->clients[index]->comm_socket_fd, gateway->logical_clock, &msg);
+							if (E_SUCCESS != return_value)
+							{
+								LOG_ERROR(("ERROR: unable to send the message\n"));
+							}
+						}
 					}
 				}
 			}
