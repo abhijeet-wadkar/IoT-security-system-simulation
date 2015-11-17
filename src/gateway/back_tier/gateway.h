@@ -32,6 +32,7 @@ typedef struct gateway_create_params
 {
 	char *gateway_ip_address;
 	char *gateway_port_no;
+	char *storage_file_name;
 }gateway_create_params;
 
 typedef struct gateway_context
@@ -42,6 +43,7 @@ typedef struct gateway_context
 	int client_count;
 	gateway_client *clients[100];
 	int logical_clock[CLOCK_SIZE];
+	FILE *storage_file_pointer;
 }gateway_context;
 
 int create_gateway(gateway_handle*, gateway_create_params*);

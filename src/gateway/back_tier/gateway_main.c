@@ -30,9 +30,9 @@ int main(int argc, char*argv[])
 
 	LOG_DEBUG(("DEBUG: Number of arguments are: %d\n", argc));
 
-	if(argc<2)
+	if(argc<3)
 	{
-		LOG_ERROR(("ERROR: Please provide configuration file name\n"));
+		LOG_ERROR(("ERROR: Please provide configuration file name(s)\n"));
 		return (0);
 	}
 
@@ -65,10 +65,9 @@ int main(int argc, char*argv[])
 
 	str_copy(&gateway_device.gateway_ip_address, tokens[0]);
 	str_copy(&gateway_device.gateway_port_no, tokens[1]);
+	str_copy(&gateway_device.storage_file_name, tokens[2]);
 	LOG_DEBUG(("IP Address: %s\n", gateway_device.gateway_ip_address));
 	LOG_DEBUG(("Port No: %s\n", gateway_device.gateway_port_no));
-
-	LOG_GATEWAY(("------------------------------------------------\n"));
 
 	return_value = create_gateway(&gateway, &gateway_device);
 	if(E_SUCCESS != return_value)
@@ -82,37 +81,11 @@ int main(int argc, char*argv[])
 
 	LOG_ERROR(("Gateway started successfully\n"));
 
-	int choice, interval;
-	while(1)
-	{
-		printf("-------------------Menu----------------\n");
-		printf("1.Change Sensor interval\n");
-		printf("2.Exit\n");
-		printf("Enter your choice: ");
-		scanf("%d", &choice);
-		if(choice==2)
-			break;
-		switch(choice)
-		{
-		case 1:
-			//print_sensors(gateway);
-			printf("Enter sensor id: ");
-			scanf("%d", &choice);
-			printf("Enter new interval: ");
-			scanf("%d", &interval);
-			//return_value = set_interval(gateway, choice, interval);
-			if(E_SUCCESS != return_value)
-			{
-				printf("Unable to set the interval\n");
-			}
-			break;
-		default:
-			printf("Enter valid choice...\n");
-		}
-	}
+	char choice;
+	printf("Press enter to exit\n");
+	scanf("%c", &choice);
 
 	delete_gateway(gateway);
-	LOG_GATEWAY(("-------------------------------------------------\n"));
 
 	free(gateway_device.gateway_ip_address);
 	free(gateway_device.gateway_port_no);

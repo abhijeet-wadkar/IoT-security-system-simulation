@@ -131,10 +131,13 @@ void* message_handler(void *context)
 
 			if(msg->u.s.type == MOTION_SENSOR)
 			{
-				if(gateway->motion_state != msg.u.value)
+				if(gateway->motion_state != msg->u.value)
 				{
-					gateway->motion_state = msg.u.value;
+					gateway->motion_state = msg->u.value;
 					if(gateway->key_state == 0)
+					{
+						/* raise alarm */
+					}
 				}
 
 			}

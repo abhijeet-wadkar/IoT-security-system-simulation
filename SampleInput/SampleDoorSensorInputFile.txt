@@ -4,4 +4,3 @@
 30;close
 40;open
 70;close
-

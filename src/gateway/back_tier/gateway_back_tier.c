@@ -36,33 +36,32 @@ void* read_callback(void*);
 void print_state(gateway_context *gateway)
 {
 	int index;
-
-	LOG_GATEWAY(("-----------------------------------------------\n"));
 	for(index=0; index<gateway->client_count; index++)
 	{
 		gateway_client *client = gateway->clients[index];
 		if(client->type == SECURITY_DEVICE)
 		{
-			LOG_GATEWAY(("%d----%s:%s----%s----%s----%s\n",
-									(int)(client&&0xFFFF),
-									client->client_ip_address,
-									client->client_port_number,
-									device_string[client->type],
-									client->area_id,
-									state_string[client->state]));
+			fprintf(gateway->storage_file_pointer,
+					"%d----%s:%s----%s----%s----%s\n",
+					(int)(client&&0xFFFF),
+					client->client_ip_address,
+					client->client_port_number,
+					device_string[client->type],
+					client->area_id,
+					state_string[client->state]);
 		}
 		else
 		{
-			LOG_GATEWAY(("%d----%s:%s----%s----%s----%d\n",
-							(int)(client&&0xFFFF),
-							client->client_ip_address,
-							client->client_port_number,
-							device_string[client->type],
-							client->area_id,
-							client->value));
+			fprintf(gateway->storage_file_pointer,
+					"%d----%s:%s----%s----%s----%d\n",
+					(int)(client&&0xFFFF),
+					client->client_ip_address,
+					client->client_port_number,
+					device_string[client->type],
+					client->area_id,
+					client->value);
 		}
 	}
-	LOG_GATEWAY(("-----------------------------------------------\n"));
 }
 
 int create_gateway(gateway_handle* handle, gateway_create_params *params)
@@ -79,6 +78,14 @@ int create_gateway(gateway_handle* handle, gateway_create_params *params)
 	memset(gateway, 0, sizeof(gateway_context));
 
 	gateway->client_count = 0;
+
+	gateway->storage_file_pointer = fopen(params->storage_file_name, "w");
+	if(!gateway->storage_file_pointer)
+	{
+		LOG_ERROR(("ERROR: Unable to open persistent storage file\n"));
+		delete_gateway((gateway_handle)gateway);
+		return E_FAILURE;
+	}
 
 	/* create network read thread */
 	return_value = create_network_thread(&gateway->network_thread, params->gateway_ip_address);
