@@ -8,9 +8,12 @@
 #ifndef GATEWAY_H_
 #define GATEWAY_H_
 
+#include <pthread.h>
+
 #include "network_functions.h"
 #include "network_read_thread.h"
 #include "message.h"
+#include "queue.h"
 
 typedef void* gateway_handle;
 
@@ -43,6 +46,12 @@ typedef struct gateway_context
 	int client_count;
 	gateway_client *clients[100];
 	int logical_clock[CLOCK_SIZE];
+	int key_state, motion_state, door_state;
+	void *buffered_messages	[100];
+	queue *msg_queue;
+	pthread_mutex_t mutex_lock;
+	pthread_cond_t cond_lock;
+	pthread_t message_handler_thread;
 }gateway_context;
 
 int create_gateway(gateway_handle*, gateway_create_params*);

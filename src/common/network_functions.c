@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <arpa/inet.h>
 #include <string.h>
+#include <time.h>
 
 #include "network_functions.h"
 #include "error_codes.h"
@@ -133,6 +134,7 @@ int read_message(int socket_fd, int logical_clock[CLOCK_SIZE], message *msg)
 	char *tokens[10] = {NULL};
 	int count = 0;
 	char *register_tokens[10] = {NULL};
+	long timestamp = 0;
 
 	/*read length */
 	while(1)
@@ -146,7 +148,7 @@ int read_message(int socket_fd, int logical_clock[CLOCK_SIZE], message *msg)
 			break;
 	}
 
-	/*read the message */
+	/*read the logical clock */
 	read_count = 0;
 	while(1)
 	{
@@ -158,6 +160,22 @@ int read_message(int socket_fd, int logical_clock[CLOCK_SIZE], message *msg)
 		if(read_count == (sizeof(int)*CLOCK_SIZE))
 			break;
 	}
+
+	memcpy(msg->logical_clock, logical_clock, (sizeof(int)*CLOCK_SIZE));
+
+	/*read the time stamp */
+	read_count = 0;
+	while(1)
+	{
+		read_count += read(socket_fd, &timestamp+read_count, sizeof(long) - read_count);
+		if(read_count==0)
+		{
+			return (E_SOCKET_CONNECTION_CLOSED);
+		}
+		if(read_count == sizeof(long))
+			break;
+	}
+	msg->timestamp = timestamp;
 
 	read_count=0;
 	while(1)
@@ -250,6 +268,9 @@ int write_message(int socket_fd, int logical_clock[CLOCK_SIZE], message *msg)
 	char value_str[10] = {'\0'};
 	int send_count = 0;
 	int msg_length = 0;
+	long timestamp = 0;
+
+	timestamp = msg->timestamp;
 
 	strcat(buffer, "type:");
 	switch(msg->type)
@@ -330,6 +351,12 @@ int write_message(int socket_fd, int logical_clock[CLOCK_SIZE], message *msg)
 	}
 
 	send_count = send(socket_fd, logical_clock, (sizeof(int)*CLOCK_SIZE), 0);
+	if(send_count < 0)
+	{
+		return (E_SOCKET_CONNCTION_ERORR);
+	}
+
+	send_count = send(socket_fd, &timestamp, sizeof(long), 0);
 	if(send_count < 0)
 	{
 		return (E_SOCKET_CONNCTION_ERORR);

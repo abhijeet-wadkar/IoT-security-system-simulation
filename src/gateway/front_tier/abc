@@ -1,0 +1,77 @@
+	switch(msg->type)
+	{
+	case SET_INTERVAL:
+		LOG_DEBUG(("DEBUG: SetInterval message received, Value: %d\n", msg->u.value));
+		break;
+	case REGISTER:
+		LOG_DEBUG(("DEBUG: Register message received\n"));
+		client->type = msg->u.s.type;
+		client->client_ip_address = msg->u.s.ip_address;
+		client->client_port_number = msg->u.s.port_no;
+		client->area_id = msg->u.s.area_id;
+		LOG_DEBUG(("DEBUG: DeviceType:%d\n", client->type));
+		LOG_DEBUG(("DEBUG: IP Address: %s\n", client->client_ip_address));
+		LOG_DEBUG(("DEBUG: Port Number: %s\n", client->client_port_number));
+		LOG_DEBUG(("DEBUG: Area Id: %s\n", client->area_id));
+		if(client->type == DOOR_SENSOR ||
+			client->type == MOTION_SENSOR ||
+			client->type == KEY_CHAIN_SENSOR)
+		{
+			client->state = 1;
+		}
+		if(client->type == SECURITY_DEVICE)
+		{
+			client->state = 0;
+		}
+
+		// Check if all the components of the system are connected to the gateway
+		if (gateway->client_count == 4)
+		{
+			for(int index=0; index < gateway->client_count; index++)
+			{
+				if(gateway->clients[index]->type != BACK_TIER_GATEWAY && gateway->clients[index]->type != SECURITY_DEVICE)
+				{
+					for(int index1=0; index1<gateway->client_count; index1++)
+					{
+						if(0 != strcmp(gateway->clients[index]->client_port_number, gateway->clients[index1]->client_port_number)
+								&& gateway->clients[index1]->type != BACK_TIER_GATEWAY
+								&& gateway->clients[index1]->type != SECURITY_DEVICE)
+						{
+							message msg;
+							msg.type = REGISTER;
+							msg.u.s.type = gateway->clients[index1]->type;
+							msg.u.s.ip_address = gateway->clients[index1]->client_ip_address;
+							msg.u.s.port_no = gateway->clients[index1]->client_port_number;
+							msg.u.s.area_id = gateway->clients[index1]->area_id;
+							LOG_INFO(("INFO: Sending Clock\n"));
+							print_logical_clock(gateway->logical_clock);
+							return_value = write_message(gateway->clients[index]->comm_socket_fd, gateway->logical_clock, &msg);
+							if (E_SUCCESS != return_value)
+							{
+								LOG_ERROR(("ERROR: unable to send the message\n"));
+							}
+						}
+					}
+				}
+			}
+		}
+		break;
+	case CURRENT_VALUE:
+		LOG_DEBUG(("Current value message received\n"));
+		LOG_DEBUG(("Value: %d\n", msg->u.value));
+
+		client->value = msg->u.value;
+
+		/* Order the events and switch security device on or off */
+
+		print_state(client->gateway);
+		break;
+	case CURRENT_STATE:
+		LOG_DEBUG(("DEBUG: Current state message is received\n"));
+		//client->state = msg->u.value;
+		//print_state(client->gateway);
+		break;
+	default:
+		LOG_DEBUG(("Unknown/Unhandled message is received\n"));
+		break;
+	}

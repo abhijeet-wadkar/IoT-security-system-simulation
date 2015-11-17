@@ -19,7 +19,6 @@ typedef enum message_type
 	CURRENT_VALUE,
 	SET_INTERVAL,
 	REGISTER,
-	INSERT_DATA
 }message_type;
 
 typedef enum device_type
@@ -36,6 +35,8 @@ typedef enum device_type
 typedef struct message
 {
 	message_type type;
+	long timestamp;
+	int logical_clock[CLOCK_SIZE];
 	union
 	{
 		int value;

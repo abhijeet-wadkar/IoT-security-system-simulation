@@ -14,8 +14,10 @@ typedef struct queue
 	struct queue *next;
 }queue;
 
-void add(queue **head, void* elem);
+int add_queue(queue **head, void* elem);
 
-void* remove(queue **head);
+void* remove_queue(queue **head);
+
+int isEmpty(queue *head);
 
 #endif /* QUEUE_H_ */

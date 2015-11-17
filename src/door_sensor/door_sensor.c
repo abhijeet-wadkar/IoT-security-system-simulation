@@ -14,6 +14,7 @@
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <time.h>
 
 #include "common.h"
 #include "door_sensor.h"
@@ -109,7 +110,7 @@ int create_sensor(sensor_handle *handle, sensor_create_params *params)
 
 	/* register sensor with gateway */
 	msg.type = REGISTER;
-	msg.u.s.type = MOTION_SENSOR;
+	msg.u.s.type = DOOR_SENSOR;
 	msg.u.s.ip_address = sensor->sensor_params->sensor_ip_address;
 	msg.u.s.port_no = sensor->sensor_params->sensor_port_no;
 	msg.u.s.area_id = sensor->sensor_params->sensor_area_id;
@@ -127,9 +128,11 @@ int create_sensor(sensor_handle *handle, sensor_create_params *params)
 	actions.sa_flags = 0;
 	actions.sa_handler = sighand;
 	sigaction(SIGALRM,&actions,NULL);
-	pthread_create(&sensor->set_value_thread, NULL, &set_value_thread, sensor);
 
 	*handle = sensor;
+
+	LOG_INFO(("INFO: Waiting for other devices to connect...\n"));
+
 	return (E_SUCCESS);
 }
 
@@ -195,6 +198,11 @@ static void* accept_callback(void *context)
 		return (NULL);
 	}
 	//client->connection_state = 1;
+
+	if(sensor->send_peer_count == 2 && sensor->recv_peer_count ==2)
+	{
+		pthread_create(&sensor->set_value_thread, NULL, &set_value_thread, sensor);
+	}
 	return (NULL);
 }
 
@@ -220,11 +228,18 @@ static void* read_callback_peer(void *context)
 		return NULL;
 	}
 
-	LOG_INFO(("INFO: msg clock\n"));
-	LOG_INFO(("IP Address: %s, PortNumber: %s\n", client->ip_address, client->port_no));
-	print_logical_clock(msg_logical_clock);
+	if(msg.type == REGISTER)
+	{
+		client->ip_address = msg.u.s.ip_address;
+		client->port_no = msg.u.s.port_no;
+		return (NULL);
+	}
+
 	adjust_clock(sensor->logical_clock, msg_logical_clock);
+
+	LOG_INFO(("INFO: Event Received: "));
 	print_logical_clock(sensor->logical_clock);
+	LOG_INFO((", timestamp: %lu, From %s:%s\n", msg.timestamp, client->ip_address, client->port_no));
 
 	return (NULL);
 }
@@ -233,7 +248,7 @@ static void* read_callback(void *context)
 {
 	sensor_context *sensor = (sensor_context*)context;
 	int return_value = 0;
-	message msg;
+	message msg, snd_msg;
 	peer *client = NULL;
 	int msg_logical_clock[CLOCK_SIZE];
 
@@ -248,11 +263,6 @@ static void* read_callback(void *context)
 		LOG_ERROR(("ERROR: Error in read message\n"));
 		return NULL;
 	}
-
-	LOG_INFO(("INFO: msg clock"));
-	print_logical_clock(msg_logical_clock);
-	adjust_clock(sensor->logical_clock, msg_logical_clock);
-	print_logical_clock(sensor->logical_clock);
 
 	switch(msg.type)
 	{
@@ -295,6 +305,23 @@ static void* read_callback(void *context)
 		}
 		sensor->send_peer[sensor->send_peer_count] = client;
 		sensor->send_peer_count++;
+
+		snd_msg.type = REGISTER;
+		snd_msg.u.s.type = DOOR_SENSOR;
+		snd_msg.u.s.ip_address = sensor->sensor_params->sensor_ip_address;
+		snd_msg.u.s.port_no = sensor->sensor_params->sensor_port_no;
+		snd_msg.u.s.area_id = sensor->sensor_params->sensor_area_id;
+		return_value = write_message(client->comm_socket_fd, sensor->logical_clock, &snd_msg);
+		if(E_SUCCESS != return_value)
+		{
+			LOG_ERROR(("Error in communication\n"));
+		}
+
+		if(sensor->send_peer_count == 2 && sensor->recv_peer_count == 2)
+		{
+			pthread_create(&sensor->set_value_thread, NULL, &set_value_thread, sensor);
+		}
+
 		break;
 	default:
 		LOG_INFO(("INFO: Unknown/Unhandled message was received\n"));
@@ -342,10 +369,14 @@ void* set_value_thread(void *context)
 	while(sensor->run)
 	{
 		msg.u.value = sensor->value;
+		msg.timestamp = time(NULL);
 
 		sensor->logical_clock[1]++;
+
+		LOG_INFO(("INFO: Event Sent:     "));
 		print_logical_clock(sensor->logical_clock);
-		LOG_INFO(("INFO: Sending temperature value %d to gateway\n", sensor->value));
+		LOG_INFO((", timestamp: %lu, Door: %s\n", msg.timestamp, tokens[1]));
+
 		return_value = write_message(sensor->socket_fd, sensor->logical_clock, &msg);
 		if(E_SUCCESS != return_value)
 		{
@@ -369,7 +400,10 @@ void* set_value_thread(void *context)
 			LOG_DEBUG(("DEBUG: Seeking to beginning of file"));
 			rewind(sensor->sensor_value_file_pointer);
 			sensor->clock = 0;
-			continue;
+			if(fgets(line, LINE_MAX, sensor->sensor_value_file_pointer) == NULL)
+			{
+				LOG_ERROR(("ERROR: Wrong sensor temperature value file\n"));
+			}
 		}
 
 		str_tokenize(line, ";\n\r", tokens, &count);
@@ -390,7 +424,6 @@ void* set_value_thread(void *context)
 		}
 		sensor->value = value;
 		sensor->interval = start - sensor->clock;
-		LOG_INFO(("INFO: Sleeping for %d second(s)\n", sensor->interval));
 		sleep(sensor->interval);
 		sensor->clock += sensor->interval;
 	}

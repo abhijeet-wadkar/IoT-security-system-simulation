@@ -12,6 +12,7 @@ SRCS = src/gateway/front_tier/gateway_front_tier.c \
 	src/common/network_read_thread.c \
 	src/common/string_helper_functions.c \
 	src/common/logger.c \
-	src/common/logical_clock_utils.c
+	src/common/logical_clock_utils.c \
+	src/common/queue.c
 	
 include base_make.mk

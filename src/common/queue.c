@@ -11,7 +11,7 @@
 #include "queue.h"
 #include "error_codes.h"
 
-int add(queue **head, void* elem)
+int add_queue(queue **head, void* elem)
 {
 	queue *node = NULL;
 	queue *temp = NULL;
@@ -21,15 +21,17 @@ int add(queue **head, void* elem)
 	{
 		return (E_FAILURE);
 	}
+	node->elem = elem;
 
 	if(*head == NULL)
 	{
 		*head = node;
 		node->next = NULL;
+		return (E_SUCCESS);
 	}
 
 	temp = *head;
-	while(temp->next == NULL)
+	while(temp->next != NULL)
 		temp = temp->next;
 
 	temp->next = node;
@@ -38,7 +40,7 @@ int add(queue **head, void* elem)
 	return (E_SUCCESS);
 }
 
-void* remove(queue **head)
+void* remove_queue(queue **head)
 {
 	queue *node = NULL;
 
@@ -46,8 +48,14 @@ void* remove(queue **head)
 		return NULL;
 
 	node = *head;
-	*head = *head->next;
-	return NULL;
+	*head = (*head)->next;
+	return node->elem;
 }
 
+int isEmpty(queue *head)
+{
+	if(NULL == head)
+		return 1;
+	return 0;
+}
 
