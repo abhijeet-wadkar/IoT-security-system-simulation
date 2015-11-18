@@ -178,7 +178,7 @@ void* message_handler(void *context)
 					gateway->door_state = msg->u.value;
 					if(gateway->key_state == 0 )
 					{
-						LOG_INFO(("INFO: Security ALert - Raise the Alarm"));
+						LOG_INFO(("INFO: Security ALert - Raise the Alarm\n"));
 					}
 					else
 					{
