@@ -149,7 +149,7 @@ void* message_handler(void *context)
 					msg->timestamp,
 					client->client_ip_address,
 					client->client_port_number);
-				if((gateway->motion_state != msg->u.value) && (gateway->motion_state = msg->u.value))
+				if(gateway->motion_state = msg->u.value)
 				{
 					if(gateway->key_state == 0)
 					{
@@ -173,19 +173,16 @@ void* message_handler(void *context)
 					msg->timestamp,
 					client->client_ip_address,
 					client->client_port_number);
-				if(gateway->door_state != msg->u.value)
+				gateway->door_state = msg->u.value;
+				if(gateway->key_state == 0 )
 				{
-					gateway->door_state = msg->u.value;
-					if(gateway->key_state == 0 )
+					LOG_INFO(("INFO: Security ALert - Raise the Alarm\n"));
+				}
+				else
+				{
+					if(gateway->door_state == 0 && gateway->motion_state == 1)
 					{
-						LOG_INFO(("INFO: Security ALert - Raise the Alarm\n"));
-					}
-					else
-					{
-						if(gateway->door_state == 0 && gateway->motion_state == 1)
-						{
-							LOG_INFO(("INFO: User Exited Home\n"));
-						}
+						LOG_INFO(("INFO: User Exited Home\n"));
 					}
 				}
 			}
