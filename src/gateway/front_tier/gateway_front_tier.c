@@ -151,9 +151,9 @@ void* message_handler(void *context)
 					client->client_port_number);
 				if((gateway->motion_state != msg->u.value) && (gateway->motion_state = msg->u.value))
 				{
-					if(gateway->key_state == 0 )
+					if(gateway->key_state == 0)
 					{
-						LOG_INFO(("INFO: Security ALert - Raise the Alarm"));
+						LOG_INFO(("INFO: Security ALert - Raise the Alarm\n"));
 					}
 					else
 					{
