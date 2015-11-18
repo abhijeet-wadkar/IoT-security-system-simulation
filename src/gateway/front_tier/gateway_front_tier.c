@@ -149,12 +149,18 @@ void* message_handler(void *context)
 					msg->timestamp,
 					client->client_ip_address,
 					client->client_port_number);
-				if(gateway->motion_state != msg->u.value)
+				if((gateway->motion_state != msg->u.value) && (gateway->motion_state = msg->u.value))
 				{
-					gateway->motion_state = msg->u.value;
-					if(gateway->key_state == 0)
+					if(gateway->key_state == 0 )
 					{
-						/* raise alarm */
+						LOG_INFO(("INFO: Security ALert - Raise the Alarm"));
+					}
+					else
+					{
+						if(gateway->door_state == 1)
+						{
+							LOG_INFO(("INFO: User Entered Home\n"));
+						}
 					}
 				}
 			}
@@ -167,6 +173,21 @@ void* message_handler(void *context)
 					msg->timestamp,
 					client->client_ip_address,
 					client->client_port_number);
+				if(gateway->door_state != msg->u.value)
+				{
+					gateway->door_state = msg->u.value;
+					if(gateway->key_state == 0 )
+					{
+						LOG_INFO(("INFO: Security ALert - Raise the Alarm"));
+					}
+					else
+					{
+						if(gateway->door_state == 0 && gateway->motion_state == 1)
+						{
+							LOG_INFO(("INFO: User Exited Home\n"));
+						}
+					}
+				}
 			}
 			else if(msg->u.s.type == KEY_CHAIN_SENSOR)
 			{
@@ -177,6 +198,7 @@ void* message_handler(void *context)
 					msg->timestamp,
 					client->client_ip_address,
 					client->client_port_number);
+				gateway->key_state = msg->u.value;
 			}
 
 			LOG_INFO(("INFO: %s\n", buffer));
