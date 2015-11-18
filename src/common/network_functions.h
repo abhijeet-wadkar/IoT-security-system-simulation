@@ -13,5 +13,6 @@ void close_socket(int socket_fd);
 void send_socket(int socket_fd, char* data, int length);
 int write_message(int socket_fd, int logical_clock[CLOCK_SIZE], message *msg);
 int read_message(int socket_fd, int logical_clock[CLOCK_SIZE], message *msg);
-
+int read_msg_from_frontend(int socket_fd, char **string);
+int send_msg_to_backend(int socket_fd, char *string);
 

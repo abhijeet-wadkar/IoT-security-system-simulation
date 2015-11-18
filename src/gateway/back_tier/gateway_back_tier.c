@@ -120,7 +120,7 @@ int create_gateway(gateway_handle* handle, gateway_create_params *params)
 	msg.u.s.type = BACK_TIER_GATEWAY;
 	msg.u.s.ip_address = params->gateway_ip_address;
 	msg.u.s.port_no = params->gateway_port_no;
-	msg.u.s.area_id = 0;
+	msg.u.s.area_id = "0";
 
 	return_value = write_message(gateway->server_socket_fd, gateway->logical_clock, &msg);
 	if(E_SUCCESS != return_value)
@@ -166,32 +166,26 @@ void delete_gateway(gateway_handle handle)
 
 void* read_callback(void *context)
 {
-	gateway_client *client = (gateway_client*)context;
-	gateway_context *gateway = client->gateway;
+	gateway_context *gateway = (gateway_context*)context;
 	int return_value = 0;
-	message msg;
-	//message snd_msg;
-	//int index;
-	//int flag_found = 0;
-	int msg_logical_clock[CLOCK_SIZE];
+	char *string = NULL;
 
-	return_value = read_message(client->comm_socket_fd, msg_logical_clock, &msg);
+	return_value = read_msg_from_frontend(gateway->server_socket_fd, &string);
 	if(return_value != E_SUCCESS)
 	{
 		LOG_ERROR(("ERROR: Error in read message\n"));
-		return NULL;
+		return (NULL);
 	}
 
-	switch(msg.type)
+	LOG_INFO(("INFO: %s", string));
+
+	if(gateway->storage_file_pointer)
 	{
-		// we are not entertaining any other message type at back end
-		//case INSERT_DATA:
-		//	LOG_DEBUG(("DEBUG: Insert data message is received\n"));
-			print_state(gateway);
-		//	break;
-		default:
-			LOG_DEBUG(("Unknown/Unhandled message is received in back tier gateway\n"));
-			break;
+		LOG_INFO(("INFO: %s", string));
+		fprintf(gateway->storage_file_pointer, "%s", string);
+		fflush(gateway->storage_file_pointer);
+		free(string);
 	}
+
 	return (NULL);
 }

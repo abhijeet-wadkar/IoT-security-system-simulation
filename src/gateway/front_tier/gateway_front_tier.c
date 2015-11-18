@@ -20,9 +20,9 @@
 #include "logical_clock_utils.h"
 
 char* device_string[] = {
-		"door_sensor",
-		"motion_sensor",
-		"key_chain_sensor",
+		"door",
+		"motion",
+		"key_chain",
 		"security_device",
 		"gateway",
 		"back_tier_gateway",
@@ -31,6 +31,16 @@ char* device_string[] = {
 char* state_string[] = {
 		"off",
 		"on"
+};
+
+char *value_string[] = {
+		"false",
+		"true"
+};
+
+char *door_string[] = {
+		"close",
+		"open"
 };
 
 typedef struct message_context
@@ -51,6 +61,7 @@ void* message_handler(void *context)
 	gateway_context *gateway = (gateway_context*)context;
 	message *msg = NULL;
 	int return_value;
+	char buffer[100] = {'\0'};
 
 	while(1)
 	{
@@ -131,6 +142,13 @@ void* message_handler(void *context)
 
 			if(msg->u.s.type == MOTION_SENSOR)
 			{
+				sprintf(buffer, "%d----%s----%s----%lu----%s----%s\n",
+					(int)(client&&0xFFFF),
+					device_string[client->type],
+					value_string[msg->u.value],
+					msg->timestamp,
+					client->client_ip_address,
+					client->client_port_number);
 				if(gateway->motion_state != msg->u.value)
 				{
 					gateway->motion_state = msg->u.value;
@@ -139,18 +157,42 @@ void* message_handler(void *context)
 						/* raise alarm */
 					}
 				}
-
 			}
 			else if(msg->u.s.type == DOOR_SENSOR)
 			{
-
+				sprintf(buffer, "%d----%s----%s----%lu----%s----%s\n",
+					(int)(client&&0xFFFF),
+					device_string[client->type],
+					door_string[msg->u.value],
+					msg->timestamp,
+					client->client_ip_address,
+					client->client_port_number);
 			}
 			else if(msg->u.s.type == KEY_CHAIN_SENSOR)
 			{
-
+				sprintf(buffer, "%d----%s----%s----%lu----%s----%s\n",
+					(int)(client&&0xFFFF),
+					device_string[client->type],
+					value_string[msg->u.value],
+					msg->timestamp,
+					client->client_ip_address,
+					client->client_port_number);
 			}
 
+			LOG_INFO(("INFO: %s\n", buffer));
 			print_state(client->gateway);
+
+			for(int index=0; index<gateway->client_count; index++)
+			{
+				if(gateway->clients[index]->type == BACK_TIER_GATEWAY)
+				{
+					return_value = send_msg_to_backend(gateway->clients[index]->comm_socket_fd, buffer);
+					if(E_SUCCESS != return_value)
+					{
+						LOG_ERROR(("ERROR: Unable to send message to back-end\n"));
+					}
+				}
+			}
 			break;
 		case CURRENT_STATE:
 			LOG_DEBUG(("DEBUG: Current state message is received\n"));

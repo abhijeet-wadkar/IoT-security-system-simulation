@@ -370,3 +370,58 @@ int write_message(int socket_fd, int logical_clock[CLOCK_SIZE], message *msg)
 	}
 	return (E_SUCCESS);
 }
+
+int send_msg_to_backend(int socket_fd, char *string)
+{
+	int msg_length = 0;
+	int send_count = 0;
+
+	msg_length = strlen(string);
+	send_count = send(socket_fd, &msg_length, sizeof(int), 0);
+	if(send_count < 0)
+	{
+		return (E_SOCKET_CONNCTION_ERORR);
+	}
+
+	send_count = send(socket_fd, string, strlen(string), 0);
+	if(send_count < 0)
+	{
+		return (E_SOCKET_SEND_ERROR);
+	}
+	return (E_SUCCESS);
+}
+
+int read_msg_from_frontend(int socket_fd, char **string)
+{
+	int msg_size = 0;
+	int read_count = 0;
+	char buffer[100] = {'\0'};
+
+	/*read length */
+	while(1)
+	{
+		read_count += read(socket_fd, &msg_size+read_count, sizeof(int) - read_count);
+		if(read_count==0)
+		{
+			return (E_SOCKET_CONNECTION_CLOSED);
+		}
+		if(read_count == sizeof(int))
+			break;
+	}
+
+	read_count=0;
+	while(1)
+	{
+		read_count += read(socket_fd, buffer+read_count, msg_size - read_count);
+		if(read_count==0)
+		{
+			return (E_SOCKET_CONNECTION_CLOSED);
+		}
+		if(read_count == msg_size)
+			break;
+	}
+
+	str_copy(string, buffer);
+	return (E_SUCCESS);
+
+}

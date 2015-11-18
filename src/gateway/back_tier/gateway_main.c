@@ -65,7 +65,7 @@ int main(int argc, char*argv[])
 
 	str_copy(&gateway_device.gateway_ip_address, tokens[0]);
 	str_copy(&gateway_device.gateway_port_no, tokens[1]);
-	str_copy(&gateway_device.storage_file_name, tokens[2]);
+	str_copy(&gateway_device.storage_file_name, argv[2]);
 	LOG_DEBUG(("IP Address: %s\n", gateway_device.gateway_ip_address));
 	LOG_DEBUG(("Port No: %s\n", gateway_device.gateway_port_no));
 
