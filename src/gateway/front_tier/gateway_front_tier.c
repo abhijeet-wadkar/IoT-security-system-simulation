@@ -140,20 +140,22 @@ void* message_handler(void *context)
 
 			client->value = msg->u.value;
 
-			if(msg->u.s.type == MOTION_SENSOR)
+			if(client->type == MOTION_SENSOR)
 			{
-				sprintf(buffer, "%d----%s----%s----%lu----%s----%s\n",
+				sprintf(buffer, "%d----%s----%s----%lu----%s----%s",
 					(int)(client&&0xFFFF),
 					device_string[client->type],
 					value_string[msg->u.value],
 					msg->timestamp,
 					client->client_ip_address,
 					client->client_port_number);
-				if(gateway->motion_state = msg->u.value)
+				LOG_INFO(("INFO: %s\n", buffer));
+				gateway->motion_state = msg->u.value;
+				if(gateway->motion_state)
 				{
 					if(gateway->key_state == 0)
 					{
-						LOG_INFO(("INFO: Security ALert - Raise the Alarm\n"));
+						LOG_INFO(("INFO: MOTION: Security ALert - Raise the Alarm\n"));
 					}
 					else
 					{
@@ -164,19 +166,20 @@ void* message_handler(void *context)
 					}
 				}
 			}
-			else if(msg->u.s.type == DOOR_SENSOR)
+			else if(client->type == DOOR_SENSOR)
 			{
-				sprintf(buffer, "%d----%s----%s----%lu----%s----%s\n",
+				sprintf(buffer, "%d----%s----%s----%lu----%s----%s",
 					(int)(client&&0xFFFF),
 					device_string[client->type],
 					door_string[msg->u.value],
 					msg->timestamp,
 					client->client_ip_address,
 					client->client_port_number);
+				LOG_INFO(("INFO: %s\n", buffer));
 				gateway->door_state = msg->u.value;
 				if(gateway->key_state == 0 )
 				{
-					LOG_INFO(("INFO: Security ALert - Raise the Alarm\n"));
+					LOG_INFO(("INFO: DOOR: Security ALert - Raise the Alarm\n"));
 				}
 				else
 				{
@@ -186,7 +189,7 @@ void* message_handler(void *context)
 					}
 				}
 			}
-			else if(msg->u.s.type == KEY_CHAIN_SENSOR)
+			else if(client->type == KEY_CHAIN_SENSOR)
 			{
 				sprintf(buffer, "%d----%s----%s----%lu----%s----%s\n",
 					(int)(client&&0xFFFF),
@@ -195,10 +198,10 @@ void* message_handler(void *context)
 					msg->timestamp,
 					client->client_ip_address,
 					client->client_port_number);
+				LOG_INFO(("INFO: %s\n", buffer));
 				gateway->key_state = msg->u.value;
 			}
 
-			LOG_INFO(("INFO: %s\n", buffer));
 			print_state(client->gateway);
 
 			for(int index=0; index<gateway->client_count; index++)
@@ -558,9 +561,9 @@ void* read_callback(void *context)
 		pthread_cond_signal(&gateway->cond_lock);
 	}
 
-	LOG_INFO(("INFO: Event Received: "));
-	print_logical_clock(gateway->logical_clock);
-	LOG_INFO((", timestamp: %lu, From %s:%s\n", msg->timestamp, client->client_ip_address, client->client_port_number));
+	//LOG_INFO(("INFO: Event Received: "));
+	//print_logical_clock(gateway->logical_clock);
+	//LOG_INFO((", timestamp: %lu, From %s:%s\n", msg->timestamp, client->client_ip_address, client->client_port_number));
 
 	pthread_mutex_unlock(&gateway->mutex_lock);
 
