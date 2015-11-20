@@ -60,8 +60,12 @@ void* message_handler(void *context)
 	gateway_client *client = NULL;
 	gateway_context *gateway = (gateway_context*)context;
 	message *msg = NULL;
+	int sensor_status[3] = {0};
 	int return_value;
 	char buffer[100] = {'\0'};
+	gateway->door_state = -1;
+	gateway->key_state = -1;
+	gateway->motion_state = -1;
 
 	while(1)
 	{
@@ -151,17 +155,14 @@ void* message_handler(void *context)
 					client->client_port_number);
 				LOG_INFO(("INFO: %s", buffer));
 				gateway->motion_state = msg->u.value;
-				if(gateway->motion_state)
+				if(sensor_status[2] != 3)
 				{
-					if(gateway->key_state == 0)
+					for(int i = 0; i < 3; i++)
 					{
-						LOG_INFO(("INFO: MOTION: Security ALert - Raise the Alarm\n"));
-					}
-					else
-					{
-						if(gateway->door_state == 1)
+						sensor_status[2] = 3;
+						if(sensor_status[i] > 1)
 						{
-							LOG_INFO(("INFO: User Entered Home\n"));
+							sensor_status[i]--;
 						}
 					}
 				}
@@ -177,15 +178,16 @@ void* message_handler(void *context)
 					client->client_port_number);
 				LOG_INFO(("INFO: %s", buffer));
 				gateway->door_state = msg->u.value;
-				if(gateway->key_state == 0 )
+
+				if(sensor_status[0] != 3)
 				{
-					LOG_INFO(("INFO: DOOR: Security ALert - Raise the Alarm\n"));
-				}
-				else
-				{
-					if(gateway->door_state == 0 && gateway->motion_state == 1)
+					for(int i = 0; i < 3; i++)
 					{
-						LOG_INFO(("INFO: User Exited Home\n"));
+						sensor_status[0] = 3;
+						if(sensor_status[i] > 1)
+						{
+							sensor_status[i]--;
+						}
 					}
 				}
 			}
@@ -200,9 +202,20 @@ void* message_handler(void *context)
 					client->client_port_number);
 				LOG_INFO(("INFO: %s", buffer));
 				gateway->key_state = msg->u.value;
+				if(sensor_status[1] != 3)
+				{
+					for(int i = 0; i < 3; i++)
+					{
+						sensor_status[1] = 3;
+						if(sensor_status[i] > 1)
+						{
+							sensor_status[i]--;
+						}
+					}
+				}
 			}
-
 			print_state(client->gateway);
+
 
 			for(int index=0; index<gateway->client_count; index++)
 			{
@@ -224,6 +237,47 @@ void* message_handler(void *context)
 		default:
 			LOG_DEBUG(("Unknown/Unhandled message is received\n"));
 			break;
+		}
+
+		// inference rules
+
+		// user/intruder entered
+		if((sensor_status[2] > sensor_status[0]) && 
+			(sensor_status[1] > sensor_status[0]))
+		{
+			if(gateway->motion_state == 1)
+			{
+				if(gateway->key_state == 0)
+				{
+					LOG_INFO(("INFO: Security Alert\n"));
+				}
+				else
+				{
+					if(gateway->door_state == 0)
+					{
+						LOG_INFO(("INFO: User Entered\n"));
+					}
+				}
+			}
+		}
+		else if((sensor_status[1] > sensor_status[0]) && 
+			(sensor_status[0] > sensor_status[2]))
+		{
+			if(gateway->motion_state == 1)
+			{
+				if(gateway->key_state == 0)
+				{
+					if(gateway->door_state == 0)
+					{
+						LOG_INFO(("INFO: User Existed\n"));
+					}
+				}
+			}
+		}
+		else if(sensor_status[2] > sensor_status[1])
+		{
+			if(gateway->motion_state == 1 && gateway->key_state == 0)
+				LOG_INFO(("INFO: Security Alert\n"));
 		}
 
 		pthread_mutex_unlock(&gateway->mutex_lock);
