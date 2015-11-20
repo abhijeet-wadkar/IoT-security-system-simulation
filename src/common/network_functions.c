@@ -108,6 +108,10 @@ device_type get_device_type(char *str)
 	{
 		return (SECURITY_DEVICE);
 	}
+	else if(strcmp(str, "back_tier_gateway")==0)
+	{
+		return (BACK_TIER_GATEWAY);
+	}
 	else if(strcmp(str, "gateway")==0)
 	{
 		return (GATEWAY);
@@ -330,6 +334,9 @@ int write_message(int socket_fd, int logical_clock[CLOCK_SIZE], message *msg)
 			break;
 		case GATEWAY:
 			strcat(buffer, "gateway");
+			break;
+		case BACK_TIER_GATEWAY:
+			strcat(buffer, "back_tier_gateway");
 			break;
 		default:
 			break;

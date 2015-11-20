@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "gateway.h"
 #include "error_codes.h"
@@ -174,14 +175,13 @@ void* read_callback(void *context)
 	if(return_value != E_SUCCESS)
 	{
 		LOG_ERROR(("ERROR: Error in read message\n"));
+		LOG_ERROR(("ERROR: Connection closed from peer\n"));
+		exit(0);
 		return (NULL);
 	}
 
-	LOG_INFO(("INFO: %s", string));
-
 	if(gateway->storage_file_pointer)
 	{
-		LOG_INFO(("INFO: %s", string));
 		fprintf(gateway->storage_file_pointer, "%s", string);
 		fflush(gateway->storage_file_pointer);
 		free(string);

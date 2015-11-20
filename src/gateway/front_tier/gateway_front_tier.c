@@ -103,7 +103,7 @@ void* message_handler(void *context)
 			}
 
 			// Check if all the components of the system are connected to the gateway
-			if (gateway->client_count == 4)
+			if (gateway->client_count == 5)
 			{
 				for(int index=0; index < gateway->client_count; index++)
 				{
@@ -142,14 +142,14 @@ void* message_handler(void *context)
 
 			if(client->type == MOTION_SENSOR)
 			{
-				sprintf(buffer, "%d----%s----%s----%lu----%s----%s",
+				sprintf(buffer, "%d----%s----%s----%lu----%s----%s\n",
 					(int)(client&&0xFFFF),
 					device_string[client->type],
 					value_string[msg->u.value],
 					msg->timestamp,
 					client->client_ip_address,
 					client->client_port_number);
-				LOG_INFO(("INFO: %s\n", buffer));
+				LOG_INFO(("INFO: %s", buffer));
 				gateway->motion_state = msg->u.value;
 				if(gateway->motion_state)
 				{
@@ -168,14 +168,14 @@ void* message_handler(void *context)
 			}
 			else if(client->type == DOOR_SENSOR)
 			{
-				sprintf(buffer, "%d----%s----%s----%lu----%s----%s",
+				sprintf(buffer, "%d----%s----%s----%lu----%s----%s\n",
 					(int)(client&&0xFFFF),
 					device_string[client->type],
 					door_string[msg->u.value],
 					msg->timestamp,
 					client->client_ip_address,
 					client->client_port_number);
-				LOG_INFO(("INFO: %s\n", buffer));
+				LOG_INFO(("INFO: %s", buffer));
 				gateway->door_state = msg->u.value;
 				if(gateway->key_state == 0 )
 				{
@@ -198,7 +198,7 @@ void* message_handler(void *context)
 					msg->timestamp,
 					client->client_ip_address,
 					client->client_port_number);
-				LOG_INFO(("INFO: %s\n", buffer));
+				LOG_INFO(("INFO: %s", buffer));
 				gateway->key_state = msg->u.value;
 			}
 
