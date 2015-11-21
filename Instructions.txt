@@ -13,26 +13,26 @@ Running the System
 2) Running Manually
 - command to run gateway_front_tier
 	$ cd obj/gateway/front_tier
-	$ ./gateway_front_tier ../../SampleConfigurationFiles/SampleGatewayConfigurationFile.txt
+	$ ./gateway_front_tier ../../SampleConfigurationFiles/SampleGatewayConfigurationFile.txt ../../output/SampleGatewayFrontTierOutputFile.txt
 
 - command to run gateway_back_tier
 	$ cd obj/gateway/back_tier
-	$ ./gateway_back_tier ../../SampleConfigurationFiles/SampleGatewayConfigurationFile.txt ../../SampleConfigurationFiles/SamplePersistentStorageFile.txt
+	$ ./gateway_front_tier ../../SampleConfigurationFiles/SampleGatewayConfigurationFile.txt ../../output/SampleGatewayFrontTierOutputFile.txt
 
 - command to run door sensor
 	$ cd obj/door_sensor
-	$ ./door_sensor ../../SampleConfigurationFiles/SampleSensorConfigurationFile2.txt ../../SampleConfigurationFiles/SampleDoorSensorInputFile.txt
+	$ ./door_sensor ../../SampleConfigurationFiles/SampleSensorConfigurationFile2.txt ../../SampleConfigurationFiles/SampleDoorSensorInputFile.txt ../../output/SampleDoorSensorOutputFile.txt
 
 - command to run motion sensor
 	$ cd obj/motion_sensor
-	$ ./motion_sensor ../../SampleConfigurationFiles/SampleSensorConfigurationFile1.txt ../../SampleConfigurationFiles/SampleSensorInputFile1.txt
+	$ ./door_sensor ../../SampleConfigurationFiles/SampleSensorConfigurationFile2.txt ../../SampleConfigurationFiles/SampleDoorSensorInputFile.txt ../../output/SampleDoorSensorOutputFile.txt
 
 - command to run key chain sensor
 	$ cd obj/key_chain_sensor
-	$ ./key_chain_sensor ../../SampleConfigurationFiles/SampleSensorConfigurationFile3.txt ../../SampleConfigurationFiles/SampleSensorInputFile2.txt
+	$ ./key_chain_sensor ../../SampleConfigurationFiles/SampleSensorConfigurationFile3.txt ../../SampleConfigurationFiles/SampleSensorInputFile2.txt ../../output/SampleKeyChainSensorOutputFile.txt
 
 - command to run smart device
 	$ cd obj/device
-	$ ./device ../../SampleConfigurationFiles/SampleSmartDeviceConfigurationFile1.txt
+	$ ./device ../../SampleConfigurationFiles/SampleSmartDeviceConfigurationFile1.txt ../../output/SampleDeviceOutput.txt
 
 	
