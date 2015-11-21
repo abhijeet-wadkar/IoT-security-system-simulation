@@ -54,6 +54,27 @@ void* read_callback(void*);
 void* message_handler(void*);
 void print_state(gateway_context *gateway);
 
+
+static void security_system_switch(gateway_context *gateway, int value)
+{
+	LOG_INFO(("Entered\n"));
+	message msg;
+	msg.type = SWITCH;
+	msg.u.value = value;
+	for(int index = 0; index < gateway->client_count; index++)
+	{
+		if(gateway->clients[index]->type == SECURITY_DEVICE)
+		{
+			int return_value = write_message(gateway->clients[index]->comm_socket_fd, gateway->logical_clock, &msg);
+			if (E_SUCCESS != return_value)
+			{
+				LOG_ERROR(("ERROR: unable to send the message\n"));
+			}
+			break;
+		}
+	}
+	LOG_INFO(("Exited\n"));
+}
 void* message_handler(void *context)
 {
 	message_context *msg_context = NULL;
@@ -146,8 +167,8 @@ void* message_handler(void *context)
 
 			if(client->type == MOTION_SENSOR)
 			{
-				sprintf(buffer, "%d----%s----%s----%lu----%s----%s\n",
-					(int)(client&&0xFFFF),
+				sprintf(buffer, "%p----%-10s----%-10s----%-10lu----%-10s----%-10s\n",
+					client,
 					device_string[client->type],
 					value_string[msg->u.value],
 					msg->timestamp,
@@ -159,18 +180,18 @@ void* message_handler(void *context)
 				{
 					for(int i = 0; i < 3; i++)
 					{
-						sensor_status[2] = 3;
 						if(sensor_status[i] > 1)
 						{
 							sensor_status[i]--;
 						}
+						sensor_status[2] = 3;
 					}
 				}
 			}
 			else if(client->type == DOOR_SENSOR)
 			{
-				sprintf(buffer, "%d----%s----%s----%lu----%s----%s\n",
-					(int)(client&&0xFFFF),
+				sprintf(buffer, "%p----%-10s----%-10s----%-10lu----%-10s----%-10s\n",
+					client,
 					device_string[client->type],
 					door_string[msg->u.value],
 					msg->timestamp,
@@ -183,18 +204,18 @@ void* message_handler(void *context)
 				{
 					for(int i = 0; i < 3; i++)
 					{
-						sensor_status[0] = 3;
 						if(sensor_status[i] > 1)
 						{
 							sensor_status[i]--;
 						}
+						sensor_status[0] = 3;
 					}
 				}
 			}
 			else if(client->type == KEY_CHAIN_SENSOR)
 			{
-				sprintf(buffer, "%d----%s----%s----%lu----%s----%s\n",
-					(int)(client&&0xFFFF),
+				sprintf(buffer, "%p----%-10s----%-10s----%-10lu----%-10s----%-10s\n",
+					client,
 					device_string[client->type],
 					value_string[msg->u.value],
 					msg->timestamp,
@@ -206,11 +227,11 @@ void* message_handler(void *context)
 				{
 					for(int i = 0; i < 3; i++)
 					{
-						sensor_status[1] = 3;
 						if(sensor_status[i] > 1)
 						{
 							sensor_status[i]--;
 						}
+						sensor_status[1] = 3;
 					}
 				}
 			}
@@ -231,6 +252,7 @@ void* message_handler(void *context)
 			break;
 		case CURRENT_STATE:
 			LOG_DEBUG(("DEBUG: Current state message is received\n"));
+			LOG_INFO(("INFO: Device Status %d\n", msg->u.value));
 			//client->state = msg->u.value;
 			//print_state(client->gateway);
 			break;
@@ -241,22 +263,32 @@ void* message_handler(void *context)
 
 		// inference rules
 
-		// user/intruder entered
-		if((sensor_status[2] > sensor_status[0]) && 
-			(sensor_status[1] > sensor_status[0]))
+		strcpy(buffer, "");
+		if(sensor_status[2] > sensor_status[0]) 
 		{
-			if(gateway->motion_state == 1)
+			if(sensor_status[1] > sensor_status[0])
 			{
-				if(gateway->key_state == 0)
+				if(gateway->motion_state == 1)
 				{
-					LOG_INFO(("INFO: Security Alert\n"));
-				}
-				else
-				{
-					if(gateway->door_state == 0)
+					if(gateway->door_state == 1 && gateway->key_state == 1)
 					{
+						strcpy(buffer, "User Entererd - Turning off Security System\n");
+						security_system_switch(gateway, 0);
 						LOG_INFO(("INFO: User Entered\n"));
 					}
+					if(gateway->key_state == 0)
+					{
+						strcpy(buffer, "Security Alert - Intruder Detected\n");
+						LOG_INFO(("INFO: Security Alert\n"));
+					}
+				}
+			}
+			else
+			{
+				if(gateway->motion_state == 1 && gateway->door_state == 1)
+				{
+					strcpy(buffer, "Someone has entered, waiting for keychain event\n");
+					LOG_INFO(("INFO: Someone has entered, waiting for keychain event\n"));
 				}
 			}
 		}
@@ -265,21 +297,39 @@ void* message_handler(void *context)
 		{
 			if(gateway->motion_state == 1)
 			{
-				if(gateway->key_state == 0)
+				if(gateway->door_state == 1)
 				{
-					if(gateway->door_state == 0)
+					if(gateway->key_state == 0)
 					{
+						strcpy(buffer, "User Existed - Turning on Security System\n");
+						security_system_switch(gateway, 1);
 						LOG_INFO(("INFO: User Existed\n"));
 					}
 				}
 			}
 		}
-		else if(sensor_status[2] > sensor_status[1])
+		else if(sensor_status[2] == 3)
 		{
 			if(gateway->motion_state == 1 && gateway->key_state == 0)
-				LOG_INFO(("INFO: Security Alert\n"));
+			{
+				strcpy(buffer, "Security Alert - Someone else in the house\n");
+				LOG_INFO(("INFO: last: Security Alert\n"));
+			}
 		}
-
+		if(strlen(buffer))
+		{
+			for(int index=0; index<gateway->client_count; index++)
+			{
+				if(gateway->clients[index]->type == BACK_TIER_GATEWAY)
+				{
+					return_value = send_msg_to_backend(gateway->clients[index]->comm_socket_fd, buffer);
+					if(E_SUCCESS != return_value)
+					{
+						LOG_ERROR(("ERROR: Unable to send message to back-end\n"));
+					}
+				}
+			}
+		}
 		pthread_mutex_unlock(&gateway->mutex_lock);
 	}
 	return (NULL);
