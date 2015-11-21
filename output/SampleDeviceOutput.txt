@@ -1,7 +1,0 @@
-INFO: SWITCH on message received
-INFO: SWITCH on message received
-INFO: SWITCH off message received
-INFO: SWITCH on message received
-INFO: SWITCH on message received
-INFO: SWITCH off message received
-INFO: SWITCH on message received
