@@ -118,7 +118,8 @@ int main(int argc, char*argv[])
 		return (0);
 	}
 
-	LOG_ERROR(("INFO: Sensor started successfully\n"));
+	LOG_SCREEN(("INFO: Key Chain Sensor started successfully\n"));
+	LOG_SCREEN(("INFO: Output is redirected to file: %s\n", argv[3]));
 
 	char choice;
 

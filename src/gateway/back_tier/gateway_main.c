@@ -79,10 +79,11 @@ int main(int argc, char*argv[])
 		return (0);
 	}
 
-	LOG_ERROR(("Gateway started successfully\n"));
+	LOG_SCREEN(("Gateway Back End started successfully\n"));
+	LOG_SCREEN(("See the storage file for output: %s\n", argv[2]));
 
 	char choice;
-	printf("Press enter to exit\n");
+	printf("Press any key to exit...\n");
 	scanf("%c", &choice);
 
 	delete_gateway(gateway);

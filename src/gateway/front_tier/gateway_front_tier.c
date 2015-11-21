@@ -20,9 +20,9 @@
 #include "logical_clock_utils.h"
 
 char* device_string[] = {
-		"door",
-		"motion",
-		"key_chain",
+		"door_sensor",
+		"motion_sensor",
+		"key_chain_sensor",
 		"security_device",
 		"gateway",
 		"back_tier_gateway",
@@ -128,6 +128,7 @@ void* message_handler(void *context)
 			// Check if all the components of the system are connected to the gateway
 			if (gateway->client_count == 5)
 			{
+				LOG_SCREEN(("All Devices registered successfully\n"));
 				for(int index=0; index < gateway->client_count; index++)
 				{
 					if(gateway->clients[index]->type != BACK_TIER_GATEWAY && gateway->clients[index]->type != SECURITY_DEVICE)
@@ -163,8 +164,7 @@ void* message_handler(void *context)
 
 			if(client->type == MOTION_SENSOR)
 			{
-				sprintf(buffer, "%p----%-10s----%-10s----%-10lu----%-10s----%-10s\n",
-					client,
+				sprintf(buffer, "1----%-20s----%-10s----%-10lu----%-10s----%-10s\n",
 					device_string[client->type],
 					value_string[msg->u.value],
 					msg->timestamp,
@@ -185,8 +185,7 @@ void* message_handler(void *context)
 			}
 			else if(client->type == DOOR_SENSOR)
 			{
-				sprintf(buffer, "%p----%-10s----%-10s----%-10lu----%-10s----%-10s\n",
-					client,
+				sprintf(buffer, "2----%-20s----%-10s----%-10lu----%-10s----%-10s\n",
 					device_string[client->type],
 					door_string[msg->u.value],
 					msg->timestamp,
@@ -208,8 +207,7 @@ void* message_handler(void *context)
 			}
 			else if(client->type == KEY_CHAIN_SENSOR)
 			{
-				sprintf(buffer, "%p----%-10s----%-10s----%-10lu----%-10s----%-10s\n",
-					client,
+				sprintf(buffer, "3----%-20s----%-10s----%-10lu----%-10s----%-10s\n",
 					device_string[client->type],
 					value_string[msg->u.value],
 					msg->timestamp,
@@ -252,7 +250,7 @@ void* message_handler(void *context)
 		}
 
 		// inference rules
-
+		int turn_device_on = 0;
 		strcpy(buffer, "");
 		if(sensor_status[2] > sensor_status[0]) 
 		{
@@ -262,14 +260,17 @@ void* message_handler(void *context)
 				{
 					if(gateway->door_state == 1 && gateway->key_state == 1)
 					{
+						turn_device_on = 0;
 						strcpy(buffer, "User Entererd - Turning off Security System\n");
 						security_system_switch(gateway, 0);
 						LOG_INFO(("INFO: User Entererd - Turning off Security System\n"));
+						LOG_SCREEN(("INFO: User Entererd - Turning off Security System\n"));
 					}
 					if(gateway->key_state == 0)
 					{
 						strcpy(buffer, "Security Alert - Intruder Detected\n");
 						LOG_INFO(("INFO: Security Alert\n"));
+						LOG_SCREEN(("INFO: Security Alert\n"));
 					}
 				}
 			}
@@ -279,6 +280,7 @@ void* message_handler(void *context)
 				{
 					strcpy(buffer, "Someone has entered, waiting for keychain event\n");
 					LOG_INFO(("INFO: Someone has entered, waiting for keychain event\n"));
+					LOG_SCREEN(("INFO: Someone has entered, waiting for keychain event\n"));
 				}
 			}
 		}
@@ -288,9 +290,11 @@ void* message_handler(void *context)
 			{
 				if(gateway->door_state == 0)
 				{
+					turn_device_on = 1;
 					strcpy(buffer, "User Existed - Turning on Security System\n");
 					security_system_switch(gateway, 1);
 					LOG_INFO(("INFO: User Existed - Turning on Security System\n"));
+					LOG_SCREEN(("INFO: User Existed - Turning on Security System\n"));
 				}
 			}
 		}
@@ -299,7 +303,8 @@ void* message_handler(void *context)
 			if(gateway->motion_state == 1 && gateway->key_state == 0)
 			{
 				strcpy(buffer, "Security Alert - Someone else in the house\n");
-				LOG_INFO(("INFO: last: Security Alert\n"));
+				LOG_INFO(("INFO: Security Alert\n"));
+				LOG_SCREEN(("INFO: Security Alert\n"));
 			}
 		}
 		if(strlen(buffer))
@@ -312,6 +317,21 @@ void* message_handler(void *context)
 					if(E_SUCCESS != return_value)
 					{
 						LOG_ERROR(("ERROR: Unable to send message to back-end\n"));
+					}
+					if(turn_device_on)
+					{
+						strcpy(buffer, "");
+						sprintf(buffer, "4----%-20s----%-10s----%-10lu----%-10s----%-10s\n",
+											device_string[SECURITY_DEVICE],
+											value_string[turn_device_on],
+											msg->timestamp,
+											gateway->clients[index]->client_ip_address,
+											gateway->clients[index]->client_port_number);
+						return_value = send_msg_to_backend(gateway->clients[index]->comm_socket_fd, buffer);
+						if(E_SUCCESS != return_value)
+						{
+							LOG_ERROR(("ERROR: Unable to send message to back-end\n"));
+						}
 					}
 				}
 			}

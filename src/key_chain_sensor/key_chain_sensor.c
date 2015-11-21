@@ -133,7 +133,7 @@ int create_sensor(sensor_handle *handle, sensor_create_params *params)
 
 	*handle = sensor;
 
-	LOG_INFO(("INFO: Waiting for Peers to connect...\n"));
+	LOG_SCREEN(("INFO: Waiting for Peers to connect...\n"));
 
 	return (E_SUCCESS);
 }
@@ -200,6 +200,8 @@ static void* accept_callback(void *context)
 		return (NULL);
 	}
 	//client->connection_state = 1;
+
+	LOG_SCREEN(("INFO: All Peers connected successfully\n"));
 
 	if(sensor->send_peer_count == 2 && sensor->recv_peer_count == 2)
 	{
@@ -393,9 +395,12 @@ void* set_value_thread(void *context)
 		pthread_mutex_lock(&sensor->mutex_lock);
 
 		sensor->logical_clock[2]++;
-		LOG_INFO(("INFO: Event Sent:     "));
+		LOG_SCREEN(("INFO: Event Sent, "));
+		LOG_INFO(("INFO: Event Sent, "));
+		print_logical_clock_to_screen(sensor->logical_clock);
 		print_logical_clock(sensor->logical_clock);
-		LOG_INFO((", timestamp: %lu, Motion: %s\n", msg.timestamp, tokens[2]));
+		LOG_INFO(("timestamp: %lu, Motion: %s\n", msg.timestamp, tokens[2]));
+		LOG_SCREEN(("timestamp: %lu, Motion: %s\n", msg.timestamp, tokens[2]));
 		return_value = write_message(sensor->socket_fd, sensor->logical_clock, &msg);
 		if(E_SUCCESS != return_value)
 		{

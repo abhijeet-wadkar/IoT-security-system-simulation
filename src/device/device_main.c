@@ -116,7 +116,7 @@ int main(int argc, char*argv[])
 		return (0);
 	}
 
-	LOG_SCREEN(("INFO: Device started successfully\n"));
+	LOG_SCREEN(("INFO: Security Device started successfully\n"));
 
 	char choice;
 

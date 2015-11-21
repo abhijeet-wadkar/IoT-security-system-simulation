@@ -113,6 +113,9 @@ int main(int argc, char*argv[])
 
 	char choice;
 
+	LOG_SCREEN(("INFO: Door Sensor started successfully\n"));
+	LOG_SCREEN(("INFO: Output is Redirected to file: %s\n", argv[3]));
+
 	printf("Press enter to exit\n");
 	scanf("%c", &choice);
 	delete_sensor(sensor);

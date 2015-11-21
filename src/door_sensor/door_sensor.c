@@ -201,6 +201,7 @@ static void* accept_callback(void *context)
 	}
 	//client->connection_state = 1;
 
+	LOG_SCREEN(("INFO: All Peers connected successfully...\n"));
 	if(sensor->send_peer_count == 2 && sensor->recv_peer_count ==2)
 	{
 		pthread_create(&sensor->set_value_thread, NULL, &set_value_thread, sensor);
@@ -379,9 +380,12 @@ void* set_value_thread(void *context)
 
 		sensor->logical_clock[1]++;
 
-		LOG_INFO(("INFO: Event Sent:     "));
+		LOG_SCREEN(("INFO: Event Sent, "));
+		LOG_INFO(("INFO: Event Sent, "));
 		print_logical_clock(sensor->logical_clock);
-		LOG_INFO((", timestamp: %lu, Door: %s\n", msg.timestamp, tokens[1]));
+		print_logical_clock_to_screen(sensor->logical_clock);
+		LOG_INFO(("timestamp: %lu, Door: %s\n", msg.timestamp, tokens[1]));
+		LOG_SCREEN(("timestamp: %lu, Door: %s\n", msg.timestamp, tokens[1]));
 
 		return_value = write_message(sensor->socket_fd, sensor->logical_clock, &msg);
 		if(E_SUCCESS != return_value)

@@ -125,16 +125,21 @@ static void* read_callback(void *context)
 	switch(msg.type)
 	{
 	case SWITCH:
+		LOG_SCREEN(("INFO: SWITCH "));
 		LOG_INFO(("INFO: SWITCH "));
 		if(msg.u.value==0)
 		{
+			LOG_SCREEN(("off"));
 			LOG_INFO(("off"));
 		}
 		else
 		{
+			LOG_SCREEN(("on"));
 			LOG_INFO(("on"));
 		}
-		LOG_INFO((" message received\n"));
+
+		LOG_SCREEN(("\n"));
+		LOG_INFO(("\n"));
 
 		break;
 	default:

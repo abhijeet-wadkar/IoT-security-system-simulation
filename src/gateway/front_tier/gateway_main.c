@@ -85,11 +85,12 @@ int main(int argc, char*argv[])
 		return (0);
 	}
 
-	LOG_SCREEN(("Gateway started successfully\n"));
+	LOG_SCREEN(("INFO: Gateway Front End started successfully\n"));
+	LOG_SCREEN(("INFO: Output is Redirected to: %s\n", argv[2]));
 
-	int choice;
+	char choice;
 	printf("Press any key to exit...\n");
-	scanf("%d", &choice);
+	scanf("%c", &choice);
 
 	delete_gateway(gateway);
 
