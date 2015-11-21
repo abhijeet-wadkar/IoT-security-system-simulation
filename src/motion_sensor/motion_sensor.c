@@ -53,6 +53,8 @@ int create_sensor(sensor_handle *handle, sensor_create_params *params)
 	sensor->recv_peer_count = 0;
 	sensor->send_peer_count = 0;
 
+	pthread_mutex_init(&sensor->mutex_lock, NULL);
+
 	sensor->sensor_value_file_pointer = fopen(params->sensor_value_file_name, "r");
 	if(!sensor->sensor_value_file_pointer)
 	{
@@ -236,7 +238,9 @@ static void* read_callback_peer(void *context)
 		return (NULL);
 	}
 
+	pthread_mutex_lock(&sensor->mutex_lock);
 	adjust_clock(sensor->logical_clock, msg_logical_clock);
+	pthread_mutex_unlock(&sensor->mutex_lock);
 
 	LOG_INFO(("INFO: Event Received: "));
 	print_logical_clock(sensor->logical_clock);
@@ -386,6 +390,7 @@ void* set_value_thread(void *context)
 		msg.u.value = sensor->value;
 		msg.timestamp = time(NULL);
 
+		pthread_mutex_lock(&sensor->mutex_lock);
 		sensor->logical_clock[0]++;
 		LOG_INFO(("INFO: Event Sent:     "));
 		print_logical_clock(sensor->logical_clock);
@@ -395,7 +400,6 @@ void* set_value_thread(void *context)
 		{
 			LOG_ERROR(("ERROR: Error in sending sensor temperature value to gateway\n"));
 		}
-
 		for(int index=0; index<sensor->send_peer_count; index++)
 		{
 			return_value = write_message(sensor->send_peer[index]->comm_socket_fd,
@@ -406,6 +410,7 @@ void* set_value_thread(void *context)
 				LOG_ERROR(("ERROR: Error in sending sensor temperature value to peer\n"));
 			}
 		}
+		pthread_mutex_unlock(&sensor->mutex_lock);
 		sleep(sensor->interval);
 		sensor->clock += sensor->interval;
 	}
