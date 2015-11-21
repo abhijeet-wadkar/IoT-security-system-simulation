@@ -57,7 +57,6 @@ void print_state(gateway_context *gateway);
 
 static void security_system_switch(gateway_context *gateway, int value)
 {
-	LOG_INFO(("Entered\n"));
 	message msg;
 	msg.type = SWITCH;
 	msg.u.value = value;
@@ -73,7 +72,6 @@ static void security_system_switch(gateway_context *gateway, int value)
 			break;
 		}
 	}
-	LOG_INFO(("Exited\n"));
 }
 void* message_handler(void *context)
 {
@@ -146,8 +144,6 @@ void* message_handler(void *context)
 								msg.u.s.ip_address = gateway->clients[index1]->client_ip_address;
 								msg.u.s.port_no = gateway->clients[index1]->client_port_number;
 								msg.u.s.area_id = gateway->clients[index1]->area_id;
-								LOG_INFO(("INFO: Sending Clock\n"));
-								print_logical_clock(gateway->logical_clock);
 								return_value = write_message(gateway->clients[index]->comm_socket_fd, gateway->logical_clock, &msg);
 								if (E_SUCCESS != return_value)
 								{
@@ -174,7 +170,6 @@ void* message_handler(void *context)
 					msg->timestamp,
 					client->client_ip_address,
 					client->client_port_number);
-				LOG_INFO(("INFO: %s", buffer));
 				gateway->motion_state = msg->u.value;
 				if(sensor_status[2] != 3)
 				{
@@ -197,7 +192,6 @@ void* message_handler(void *context)
 					msg->timestamp,
 					client->client_ip_address,
 					client->client_port_number);
-				LOG_INFO(("INFO: %s", buffer));
 				gateway->door_state = msg->u.value;
 
 				if(sensor_status[0] != 3)
@@ -221,7 +215,6 @@ void* message_handler(void *context)
 					msg->timestamp,
 					client->client_ip_address,
 					client->client_port_number);
-				LOG_INFO(("INFO: %s", buffer));
 				gateway->key_state = msg->u.value;
 				if(sensor_status[1] != 3)
 				{
@@ -252,9 +245,6 @@ void* message_handler(void *context)
 			break;
 		case CURRENT_STATE:
 			LOG_DEBUG(("DEBUG: Current state message is received\n"));
-			LOG_INFO(("INFO: Device Status %d\n", msg->u.value));
-			//client->state = msg->u.value;
-			//print_state(client->gateway);
 			break;
 		default:
 			LOG_DEBUG(("Unknown/Unhandled message is received\n"));
@@ -274,7 +264,7 @@ void* message_handler(void *context)
 					{
 						strcpy(buffer, "User Entererd - Turning off Security System\n");
 						security_system_switch(gateway, 0);
-						LOG_INFO(("INFO: User Entered\n"));
+						LOG_INFO(("INFO: User Entererd - Turning off Security System\n"));
 					}
 					if(gateway->key_state == 0)
 					{
@@ -292,19 +282,15 @@ void* message_handler(void *context)
 				}
 			}
 		}
-		else if((sensor_status[1] > sensor_status[0]) && 
-			(sensor_status[0] > sensor_status[2]))
+		else if(sensor_status[0] > sensor_status[2])
 		{
 			if(gateway->motion_state == 1)
 			{
-				if(gateway->door_state == 1)
+				if(gateway->door_state == 0)
 				{
-					if(gateway->key_state == 0)
-					{
-						strcpy(buffer, "User Existed - Turning on Security System\n");
-						security_system_switch(gateway, 1);
-						LOG_INFO(("INFO: User Existed\n"));
-					}
+					strcpy(buffer, "User Existed - Turning on Security System\n");
+					security_system_switch(gateway, 1);
+					LOG_INFO(("INFO: User Existed - Turning on Security System\n"));
 				}
 			}
 		}
@@ -665,9 +651,9 @@ void* read_callback(void *context)
 		pthread_cond_signal(&gateway->cond_lock);
 	}
 
-	//LOG_INFO(("INFO: Event Received: "));
-	//print_logical_clock(gateway->logical_clock);
-	//LOG_INFO((", timestamp: %lu, From %s:%s\n", msg->timestamp, client->client_ip_address, client->client_port_number));
+	LOG_INFO(("INFO: Event Received: "));
+	print_logical_clock(gateway->logical_clock);
+	LOG_INFO((", timestamp: %lu, From %s:%s\n", msg->timestamp, client->client_ip_address, client->client_port_number));
 
 	pthread_mutex_unlock(&gateway->mutex_lock);
 

@@ -21,12 +21,19 @@
 #define LOG(x)
 #endif
 
+#define LOG_SCREEN(x) printf x
+
+#define LOG_INFO(x) log_to_output_file x;
+
 #define LOG_ERROR(x) printf x
-#define LOG_INFO(x) printf x
+//#define LOG_INFO(x) printf x
 
 #define LOG_GATEWAY(x) log_to_gateway_log_file x;
 
+int log_open_output_file(char *filename);
+void log_open_file(char *filename);
 void log_to_file(char *msg, ...);
+void log_to_output_file(char *msg, ...);
 void log_to_gateway_log_file(char *msg, ...);
 void logger_close();
 

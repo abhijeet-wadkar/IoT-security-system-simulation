@@ -48,9 +48,13 @@ void print_logical_clock(int logical_clock[CLOCK_SIZE])
 	for(int index=0; index<CLOCK_SIZE; index++)
 	{
 		if(index+1==CLOCK_SIZE)
+		{
 			LOG_INFO(("%d", logical_clock[index]));
+		}
 		else
+		{
 			LOG_INFO(("%d,", logical_clock[index]));
+		}
 	}
 	LOG_INFO((">"));
 }

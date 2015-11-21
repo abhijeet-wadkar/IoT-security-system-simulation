@@ -133,7 +133,7 @@ int create_sensor(sensor_handle *handle, sensor_create_params *params)
 
 	*handle = sensor;
 
-	LOG_INFO(("INFO: Waiting for other devices to connect...\n"));
+	LOG_SCREEN(("INFO: Waiting for Peers to connect...\n"));
 
 	return (E_SUCCESS);
 }

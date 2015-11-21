@@ -25,10 +25,11 @@ int main(int argc, char*argv[])
 	int count = 0;
 	sensor_create_params sensor_device = {NULL, NULL, NULL};
 	sensor_handle sensor = NULL;
+	int return_value = 0;
 
 	LOG_DEBUG(("DEBUG: Number of arguments are: %d\n", argc));
 
-	if(argc<3)
+	if(argc<4)
 	{
 		LOG_ERROR(("ERROR: Please provide configuration file name(s)\n"));
 		return (0);
@@ -42,6 +43,13 @@ int main(int argc, char*argv[])
 	if(!conf_file_pointer)
 	{
 		LOG_ERROR(("ERROR: Error in opening configuration file\n"));
+		return (0);
+	}
+
+	return_value = log_open_output_file(argv[3]);
+	if(E_SUCCESS != return_value)
+	{
+		LOG_ERROR(("ERROR: Unable to open the file for writing\n"));
 		return (0);
 	}
 
@@ -97,7 +105,7 @@ int main(int argc, char*argv[])
 	LOG_DEBUG(("DEBUG: sensor port_no: %s\n", sensor_device.sensor_port_no));
 	LOG_DEBUG(("DEBUG: sensor area_id: %s\n", sensor_device.sensor_area_id));
 
-	int return_value = create_sensor(&sensor, &sensor_device);
+	return_value = create_sensor(&sensor, &sensor_device);
 	if(return_value != E_SUCCESS)
 	{
 		LOG_ERROR(("ERROR: Unable to create sensor\n"));
@@ -110,7 +118,7 @@ int main(int argc, char*argv[])
 		return (0);
 	}
 
-	LOG_ERROR(("Sensor started successfully\n"));
+	LOG_ERROR(("INFO: Sensor started successfully\n"));
 
 	char choice;
 

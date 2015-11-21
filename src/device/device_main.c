@@ -25,10 +25,11 @@ int main(int argc, char*argv[])
 	int count = 0;
 	device_create_params device_device = {NULL, NULL, NULL};
 	device_handle device = NULL;
+	int return_value = 0;
 
 	LOG_DEBUG(("DEBUG: Number of arguments are: %d\n", argc));
 
-	if(argc<2)
+	if(argc<3)
 	{
 		LOG_ERROR(("ERROR: Please provide configuration file name\n"));
 		return (0);
@@ -42,6 +43,13 @@ int main(int argc, char*argv[])
 	if(!conf_file_pointer)
 	{
 		LOG_ERROR(("ERROR: Error in opening configuration file\n"));
+		return (0);
+	}
+
+	return_value = log_open_output_file(argv[2]);
+	if(E_SUCCESS != return_value)
+	{
+		LOG_ERROR(("ERROR: Unable to open the file for writing\n"));
 		return (0);
 	}
 
@@ -95,7 +103,6 @@ int main(int argc, char*argv[])
 	LOG_DEBUG(("DEBUG: port_no: %s\n", device_device.device_port_no));
 	LOG_DEBUG(("DEBUG: area_id: %s\n", device_device.device_area_id));
 
-	int return_value;
 	return_value = create_device(&device, &device_device);
 	if(E_SUCCESS != return_value)
 	{
@@ -109,7 +116,7 @@ int main(int argc, char*argv[])
 		return (0);
 	}
 
-	LOG_ERROR(("Device started successfully\n"));
+	LOG_SCREEN(("INFO: Device started successfully\n"));
 
 	char choice;
 

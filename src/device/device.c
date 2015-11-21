@@ -73,9 +73,6 @@ int create_device(device_handle *handle, device_create_params *params)
 	msg.u.s.port_no = device->device_params->device_port_no;
 	msg.u.s.area_id = device->device_params->device_area_id;
 
-	LOG_INFO(("INFO: Sending Clock\n"));
-	print_logical_clock(device->logical_clock);
-
 	return_value = write_message(device->socket_fd, device->logical_clock, &msg);
 	if(E_SUCCESS != return_value)
 	{
@@ -112,7 +109,6 @@ static void* read_callback(void *context)
 	device_context *device = (device_context*)context;
 	int return_value = 0;
 	message msg;
-	message snd_msg;
 
 	return_value = read_message(device->socket_fd, device->logical_clock, &msg);
 	if(return_value != E_SUCCESS)
@@ -131,21 +127,15 @@ static void* read_callback(void *context)
 	case SWITCH:
 		LOG_INFO(("INFO: SWITCH "));
 		if(msg.u.value==0)
+		{
 			LOG_INFO(("off"));
+		}
 		else
+		{
 			LOG_INFO(("on"));
+		}
 		LOG_INFO((" message received\n"));
 
-
-		snd_msg.type = CURRENT_STATE;
-		snd_msg.u.value = device->state;
-		LOG_INFO(("INFO: Sending Clock\n"));
-		print_logical_clock(device->logical_clock);
-		return_value = write_message(device->socket_fd, device->logical_clock, &snd_msg);
-		if(E_SUCCESS != return_value)
-		{
-			LOG_ERROR(("ERROR: Error in sending message to gateway\n"));
-		}
 		break;
 	default:
 		LOG_INFO(("INFO: Unknown/Unsupported message was received\n"));

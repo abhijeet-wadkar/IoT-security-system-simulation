@@ -25,6 +25,7 @@ int main(int argc, char*argv[])
 	int count = 0;
 	sensor_create_params sensor_device = {NULL, NULL, NULL};
 	sensor_handle sensor = NULL;
+	int return_value = 0;
 
 	LOG_DEBUG(("DEBUG: Number of arguments are: %d\n", argc));
 
@@ -97,7 +98,7 @@ int main(int argc, char*argv[])
 	LOG_DEBUG(("DEBUG: sensor port_no: %s\n", sensor_device.sensor_port_no));
 	LOG_DEBUG(("DEBUG: sensor area_id: %s\n", sensor_device.sensor_area_id));
 
-	int return_value = create_sensor(&sensor, &sensor_device);
+	return_value = create_sensor(&sensor, &sensor_device);
 	if(return_value != E_SUCCESS)
 	{
 		LOG_ERROR(("ERROR: Unable to create sensor\n"));
@@ -109,8 +110,6 @@ int main(int argc, char*argv[])
 		fclose(conf_file_pointer);
 		return (0);
 	}
-
-	LOG_ERROR(("Sensor started successfully\n"));
 
 	char choice;
 
