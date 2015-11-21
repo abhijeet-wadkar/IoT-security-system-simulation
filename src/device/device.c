@@ -136,8 +136,6 @@ static void* read_callback(void *context)
 			LOG_INFO(("on"));
 		LOG_INFO((" message received\n"));
 
-		if(msg.u.value != device->state)
-			device->state = msg.u.value;
 
 		snd_msg.type = CURRENT_STATE;
 		snd_msg.u.value = device->state;
