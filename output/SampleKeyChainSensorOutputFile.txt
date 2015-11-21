@@ -1,0 +1,24 @@
+INFO: Waiting for Peers to connect...
+INFO: Register received from gateway
+INFO: New Peer 127.0.0.1, 7002
+INFO: Register received from gateway
+INFO: New Peer 127.0.0.1, 7001
+INFO: Event Sent:     CLOCK<0,0,1,0>, timestamp: 1448077596, Motion: false
+INFO: Event Received: CLOCK<1,1,1,0>, timestamp: 1448077596, From 127.0.0.1:7001
+INFO: Event Received: CLOCK<1,1,1,0>, timestamp: 1448077596, From 127.0.0.1:7002
+INFO: Event Sent:     CLOCK<1,1,2,0>, timestamp: 1448077601, Motion: true
+INFO: Event Received: CLOCK<2,2,2,0>, timestamp: 1448077601, From 127.0.0.1:7001
+INFO: Event Received: CLOCK<2,2,2,0>, timestamp: 1448077601, From 127.0.0.1:7002
+INFO: Event Sent:     CLOCK<2,2,3,0>, timestamp: 1448077606, Motion: false
+INFO: Event Received: CLOCK<3,3,3,0>, timestamp: 1448077606, From 127.0.0.1:7001
+INFO: Event Received: CLOCK<3,3,3,0>, timestamp: 1448077606, From 127.0.0.1:7002
+INFO: Event Sent:     CLOCK<3,3,4,0>, timestamp: 1448077611, Motion: true
+INFO: Event Received: CLOCK<3,4,4,0>, timestamp: 1448077611, From 127.0.0.1:7002
+INFO: Event Received: CLOCK<4,4,4,0>, timestamp: 1448077611, From 127.0.0.1:7001
+INFO: Event Sent:     CLOCK<4,4,5,0>, timestamp: 1448077616, Motion: false
+INFO: Event Received: CLOCK<4,5,5,0>, timestamp: 1448077616, From 127.0.0.1:7002
+INFO: Event Received: CLOCK<5,5,5,0>, timestamp: 1448077616, From 127.0.0.1:7001
+INFO: Event Sent:     CLOCK<5,5,6,0>, timestamp: 1448077621, Motion: true
+INFO: Event Received: CLOCK<5,6,6,0>, timestamp: 1448077621, From 127.0.0.1:7002
+INFO: Event Received: CLOCK<5,7,6,0>, timestamp: 1448077621, From 127.0.0.1:7002
+INFO: Event Received: CLOCK<6,7,6,0>, timestamp: 1448077621, From 127.0.0.1:7001

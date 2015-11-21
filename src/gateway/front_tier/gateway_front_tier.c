@@ -271,6 +271,9 @@ void* message_handler(void *context)
 						strcpy(buffer, "Security Alert - Intruder Detected\n");
 						LOG_INFO(("INFO: Security Alert\n"));
 						LOG_SCREEN(("INFO: Security Alert\n"));
+						gateway->motion_state = -1;
+						gateway->door_state = -1;
+						gateway->key_state = -1;
 					}
 				}
 			}
@@ -284,7 +287,7 @@ void* message_handler(void *context)
 				}
 			}
 		}
-		else if(sensor_status[0] > sensor_status[2])
+		else if(sensor_status[0] > sensor_status[2] && sensor_status[2] == 3)
 		{
 			if(gateway->motion_state == 1)
 			{
@@ -305,6 +308,10 @@ void* message_handler(void *context)
 				strcpy(buffer, "Security Alert - Someone else in the house\n");
 				LOG_INFO(("INFO: Security Alert\n"));
 				LOG_SCREEN(("INFO: Security Alert\n"));
+				LOG_INFO(("INFO: last: Security Alert\n"));
+				gateway->motion_state = -1;
+				gateway->door_state = -1;
+				gateway->key_state = -1;
 			}
 		}
 		if(strlen(buffer))
